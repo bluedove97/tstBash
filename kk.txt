@@ -1,0 +1,473 @@
+#노드마다 돌아다니며 설치
+apt-get update
+apt-get install -y socat conntrack ebtables ipset
+
+/etc/resolv.conf 파일 확인
+
+
+
+#root로 swap disabled
+swapoff -a && sed -i '/swap/s/^/#/' /etc/fstab
+
+
+#ssh-keygen
+ssh-keygen -t rsa
+touch ~/.ssh/authorized_keys
+chmod 755 ~/.ssh/authorized_keys
+
+
+alias m1='ssh -i ~/.ssh/id_rsa kk-m1-ubuntu'
+alias m2='ssh -i ~/.ssh/id_rsa kk-m2-ubuntu'
+alias w1='ssh -i ~/.ssh/id_rsa kk-w1-ubuntu'
+alias w2='ssh -i ~/.ssh/id_rsa kk-w2-ubuntu'
+
+source .profile
+
+
+master에
+#다운로드 kubekey  
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.7 sh -
+chmod +x kk
+root@kk-m1-ubuntu:~# ./kk version --show-supported-k8s
+v1.19.0
+v1.19.8
+v1.19.9
+v1.19.15
+v1.20.4
+v1.20.6
+v1.20.10
+v1.21.0
+v1.21.1
+v1.21.2
+v1.21.3
+v1.21.4
+v1.21.5
+v1.21.6
+v1.21.7
+v1.21.8
+v1.21.9
+v1.21.10
+v1.21.11
+v1.21.12
+v1.21.13
+v1.21.14
+v1.22.0
+v1.22.1
+v1.22.2
+v1.22.3
+v1.22.4
+v1.22.5
+v1.22.6
+v1.22.7
+v1.22.8
+v1.22.9
+v1.22.10
+v1.22.11
+v1.22.12
+v1.22.13
+v1.22.14
+v1.22.15
+v1.22.16
+v1.22.17
+v1.23.0
+v1.23.1
+v1.23.2
+v1.23.3
+v1.23.4
+v1.23.5
+v1.23.6
+v1.23.7
+v1.23.8
+v1.23.9
+v1.23.10
+v1.23.11
+v1.23.12
+v1.23.13
+v1.23.14
+v1.23.15
+v1.24.0
+v1.24.1
+v1.24.2
+v1.24.3
+v1.24.4
+v1.24.5
+v1.24.6
+v1.24.7
+v1.24.8
+v1.24.9
+v1.25.0
+v1.25.1
+v1.25.2
+v1.25.3
+v1.25.4
+v1.25.5
+v1.26.0
+
+
+#kubesphere v3.3.2 지원 k8s
+v1.20.x, v1.21.x, * v1.22.x, * v1.23.x, and * v1.24.x
+
+
+#kk executable
+v1.22.17
+
+
+# create config 파일
+./kk create config --with-kubernetes v1.22.17 --with-kubesphere v3.3.2
+vi로 수정
+
+
+  - {name: kk-m1-ubuntu, address: 10.100.0.107, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w1-ubuntu, address: 10.100.0.109, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w2-ubuntu, address: 10.100.0.110, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-m2-ubuntu, address: 10.100.0.108, privateKeyPath: "~/.ssh/id_rsa"}
+
+
+#create cluster
+
+./kk create cluster -f config-sample.yaml 
+
+
+# 4. Verify the installation
+
+kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere   -system -l app=ks-install -o jsonpath='{.items[0].metadata.name}') -f
+
+
+mkdir -p ~/.kube
+sudo cp -i /etc/kubernetes/admin.conf ~/.kube/config
+sudo chown $(id -u):$(id -g) ~/.kube/config
+
+
+#admin 접속
+10.100.0.107:30880
+http://192.168.219.167:30880/
+
+admin / P@88w0rd
+admin / Kubesphere1
+
+
+#kubectl 자동 완성 활성화
+source <(kubectl completion bash) 
+2023-07-17
+
+
+
+
+
+
+
+
+# cluster 업그레이드
+# kubekey로 kubernetes의 버전을 v1.22.17 에서 v1.24.9 로 업그레이드
+v3.2.x를 실행하는 KubeSphere 클러스터가 있어야 한다.
+./kk create config --from-cluster 로 구성 파일 생성
+./kk upgrade --with-kubernetes v1.24.9  -f upgrade-k8s.yaml
+
+
+
+
+The connection to the server lb.kubesphere.local:6443 was refused - did you specify the right host or port?
+10:07:26 KST message: [kk-m1-ubuntu]
+get kubernetes cluster info failed: Failed to exec command: sudo -E /bin/bash -c "/usr/local/bin/kubectl --no-headers=true get nodes -o custom-columns=:metadata.name,:status.nodeInfo.kubeletVersion,:status.addresses" 
+The connection to the server lb.kubesphere.local:6443 was refused - did you specify the right host or port?: Process exited with status 1
+
+
+
+error: Pipeline[UpgradeClusterPipeline] execute failed: Module[ProgressiveUpgradeModule 1/2] exec failed: 
+failed: [kk-m1-ubuntu] [UpgradeClusterOnMaster] exec failed after 3 retires: upgrade cluster using kubeadm failed: kk-m1-ubuntu: 
+failed: [kk-m1-ubuntu] [KubeadmUpgrade] exec failed after 3 retires: upgrade master failed: kk-m1-ubuntu: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0716 13:44:05.657478   62373 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0716 13:44:05.657549   62373 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.15
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+
+
+
+
+#create-cluster yaml
+apiVersion: kubekey.kubesphere.io/v1alpha2
+kind: Cluster
+metadata:
+  name: sample
+spec:
+  hosts:
+  - {name: kk-m1-ubuntu, address: 10.100.0.107, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w1-ubuntu, address: 10.100.0.109, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w2-ubuntu, address: 10.100.0.110, privateKeyPath: "~/.ssh/id_rsa"}
+  roleGroups:
+    etcd:
+    - kk-m1-ubuntu
+    control-plane: 
+    - kk-m1-ubuntu
+    worker:
+    - kk-w1-ubuntu
+    - kk-w2-ubuntu
+  controlPlaneEndpoint:
+    ## Internal loadbalancer for apiservers 
+    # internalLoadbalancer: haproxy
+
+    domain: lb.kubesphere.local
+    address: ""
+    port: 6443
+  kubernetes:
+    version: v1.22.17
+    clusterName: cluster.local
+    autoRenewCerts: true
+    containerManager: docker
+  etcd:
+    type: kubekey
+  network:
+    plugin: calico
+    kubePodsCIDR: 10.233.64.0/18
+    kubeServiceCIDR: 10.233.0.0/18
+    ## multus support. https://github.com/k8snetworkplumbingwg/multus-cni
+    multusCNI:
+      enabled: false
+  registry:
+    privateRegistry: ""
+    namespaceOverride: ""
+    registryMirrors: []
+    insecureRegistries: []
+  addons: []
+
+
+
+---
+apiVersion: installer.kubesphere.io/v1alpha1
+kind: ClusterConfiguration
+metadata:
+  name: ks-installer
+  namespace: kubesphere-system
+  labels:
+    version: v3.3.2
+spec:
+  persistence:
+    storageClass: ""
+  authentication:
+    jwtSecret: ""
+  zone: ""
+  local_registry: ""
+  namespace_override: ""
+  # dev_tag: ""
+  etcd:
+    monitoring: false
+    endpointIps: localhost
+    port: 2379
+    tlsEnable: true
+  common:
+    core:
+      console:
+        enableMultiLogin: true
+        port: 30880
+        type: NodePort
+    # apiserver:
+    #  resources: {}
+    # controllerManager:
+    #  resources: {}
+    redis:
+      enabled: false
+      volumeSize: 2Gi
+    openldap:
+      enabled: false
+      volumeSize: 2Gi
+    minio:
+      volumeSize: 20Gi
+    monitoring:
+      # type: external
+      endpoint: http://prometheus-operated.kubesphere-monitoring-system.svc:9090
+      GPUMonitoring:
+        enabled: false
+    gpu:
+      kinds:
+      - resourceName: "nvidia.com/gpu"
+        resourceType: "GPU"
+        default: true
+    es:
+      # master:
+      #   volumeSize: 4Gi
+      #   replicas: 1
+      #   resources: {}
+      # data:
+      #   volumeSize: 20Gi
+      #   replicas: 1
+      #   resources: {}
+      logMaxAge: 7
+      elkPrefix: logstash
+      basicAuth:
+        enabled: false
+        username: ""
+        password: ""
+      externalElasticsearchHost: ""
+      externalElasticsearchPort: ""
+  alerting:
+    enabled: false
+    # thanosruler:
+    #   replicas: 1
+    #   resources: {}
+  auditing:
+    enabled: false
+    # operator:
+    #   resources: {}
+    # webhook:
+    #   resources: {}
+  devops:
+    enabled: false
+    # resources: {}
+    jenkinsMemoryLim: 8Gi
+    jenkinsMemoryReq: 4Gi
+    jenkinsVolumeSize: 8Gi
+  events:
+    enabled: false
+    # operator:
+    #   resources: {}
+    # exporter:
+    #   resources: {}
+    # ruler:
+    #   enabled: true
+    #   replicas: 2
+    #   resources: {}
+  logging:
+    enabled: false
+    logsidecar:
+      enabled: true
+      replicas: 2
+      # resources: {}
+  metrics_server:
+    enabled: false
+  monitoring:
+    storageClass: ""
+    node_exporter:
+      port: 9100
+      # resources: {}
+    # kube_rbac_proxy:
+    #   resources: {}
+    # kube_state_metrics:
+    #   resources: {}
+    # prometheus:
+    #   replicas: 1
+    #   volumeSize: 20Gi
+    #   resources: {}
+    #   operator:
+    #     resources: {}
+    # alertmanager:
+    #   replicas: 1
+    #   resources: {}
+    # notification_manager:
+    #   resources: {}
+    #   operator:
+    #     resources: {}
+    #   proxy:
+    #     resources: {}
+    gpu:
+      nvidia_dcgm_exporter:
+        enabled: false
+        # resources: {}
+  multicluster:
+    clusterRole: none
+  network:
+    networkpolicy:
+      enabled: false
+    ippool:
+      type: none
+    topology:
+      type: none
+  openpitrix:
+    store:
+      enabled: false
+  servicemesh:
+    enabled: false
+    istio:
+      components:
+        ingressGateways:
+        - name: istio-ingressgateway
+          enabled: false
+        cni:
+          enabled: false
+  edgeruntime:
+    enabled: false
+    kubeedge:
+      enabled: false
+      cloudCore:
+        cloudHub:
+          advertiseAddress:
+            - ""
+        service:
+          cloudhubNodePort: "30000"
+          cloudhubQuicNodePort: "30001"
+          cloudhubHttpsNodePort: "30002"
+          cloudstreamNodePort: "30003"
+          tunnelNodePort: "30004"
+        # resources: {}
+        # hostNetWork: false
+      iptables-manager:
+        enabled: true
+        mode: "external"
+        # resources: {}
+      # edgeService:
+      #   resources: {}
+  terminal:
+    timeout: 600
+
+
+
+
+#add-node yaml
+apiVersion: kubekey.kubesphere.io/v1alpha2
+kind: Cluster
+metadata:
+  name: sample
+spec:
+  hosts:
+  ##You should complete the ssh information of the hosts
+  - {name: kk-m1-ubuntu, address: 10.100.0.107, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w1-ubuntu, address: 10.100.0.109, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w2-ubuntu, address: 10.100.0.110, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-m2-ubuntu, address: 10.100.0.108, privateKeyPath: "~/.ssh/id_rsa"}
+  roleGroups:
+    etcd:
+    - kk-m1-ubuntu
+    master:
+    - kk-m1-ubuntu
+    worker:
+    - kk-w1-ubuntu
+    - kk-w2-ubuntu
+    - kk-m2-ubuntu
+  controlPlaneEndpoint:
+    ##Internal loadbalancer for apiservers
+    #internalLoadbalancer: haproxy
+
+    ##If the external loadbalancer was used, 'address' should be set to loadbalancer's ip.
+    domain: lb.kubesphere.local
+    address: ""
+    port: 6443
+  kubernetes:
+    version: v1.22.17
+    clusterName: cluster.local
+    proxyMode: ipvs
+    masqueradeAll: false
+    maxPods: 110
+    nodeCidrMaskSize: 24
+  network:
+    plugin: calico
+    kubePodsCIDR: 10.233.64.0/18
+    kubeServiceCIDR: 10.233.0.0/18
+  registry:
+    privateRegistry: ""
+
+
+
+
+swapoff -a
+root@kk-m1-ubuntu:~# systemctl restart kubelet.service
+root@kk-m1-ubuntu:~# systemctl status kubelet.service

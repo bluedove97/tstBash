@@ -512,7 +512,7 @@ root@kk-m1-ubuntu:~# systemctl status kubelet.service
 ------------------------------------
 all in one --> kk-m2-ubuntu
 
-curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.7 sh -
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.8 sh -
 
 chmod +x kk
 

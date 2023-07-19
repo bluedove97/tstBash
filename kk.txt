@@ -145,6 +145,9 @@ http://192.168.219.167:30880/
 admin / P@88w0rd
 admin / Kubesphere1
 
+bluedove / bluedove97@acornsoft.io / Kubesphere1
+
+
 
 #kubectl 자동 완성 활성화
 source <(kubectl completion bash) 
@@ -471,3 +474,527 @@ spec:
 swapoff -a
 root@kk-m1-ubuntu:~# systemctl restart kubelet.service
 root@kk-m1-ubuntu:~# systemctl status kubelet.service
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------
+all in one --> kk-m2-ubuntu
+
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.7 sh -
+
+chmod +x kk
+
+
+./kk create cluster --with-kubernetes v1.22.17
+
+./kk upgrade --with-kubernetes v1.24.9
+
+
+
+
+root@kk-m2-ubuntu:~# ./kk upgrade --with-kubernetes v1.24.9
+
+
+ _   __      _          _   __           
+| | / /     | |        | | / /           
+| |/ / _   _| |__   ___| |/ /  ___ _   _ 
+|    \| | | | '_ \ / _ \    \ / _ \ | | |
+| |\  \ |_| | |_) |  __/ |\  \  __/ |_| |
+\_| \_/\__,_|_.__/ \___\_| \_/\___|\__, |
+                                    __/ |
+                                   |___/
+
+23:51:25 KST [GreetingsModule] Greetings
+23:51:26 KST message: [kk-m2-ubuntu.example.com]
+Greetings, KubeKey!
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [NodePreCheckModule] A pre-check on nodes
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Get KubeConfig file
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Get all nodes Kubernetes version
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Calculate min Kubernetes version
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Check desired Kubernetes version
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Check KubeSphere version
+23:51:26 KST success: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Check dependency matrix for KubeSphere and Kubernetes
+23:51:26 KST skipped: [kk-m2-ubuntu.example.com]
+23:51:26 KST [ClusterPreCheckModule] Get kubernetes nodes status
+23:51:27 KST success: [kk-m2-ubuntu.example.com]
+23:51:27 KST [UpgradeConfirmModule] Display confirmation form
++--------------------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+| name                     | sudo | curl | openssl | ebtables | socat | ipset | ipvsadm | conntrack | chrony | docker  | containerd | nfs client | ceph client | glusterfs client | time         |
++--------------------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+| kk-m2-ubuntu.example.com | y    | y    | y       | y        | y     | y     |         | y         |        | 20.10.8 | v1.4.9     |            |             |                  | KST 23:51:26 |
++--------------------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+
+Cluster nodes status:
+NAME                       STATUS   ROLES                         AGE    VERSION    INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+kk-m2-ubuntu.example.com   Ready    control-plane,master,worker   6m3s   v1.22.17   10.100.0.108   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   docker://20.10.8
+
+Upgrade Confirmation:
+kubernetes version: v1.22.17 to v1.24.9
+
+[Notice]
+Pre-upgrade check failed. The container runtime of the current cluster is Docker.
+Kubernetes v1.24 and later no longer support dockershim and Docker.
+Make sure you have completed the migration from Docker to other container runtimes that are compatible with the Kubernetes CRI.
+For more information, see:
+https://kubernetes.io/docs/setup/production-environment/container-runtimes/#container-runtimes
+https://kubernetes.io/blog/2022/02/17/dockershim-faq/
+
+Continue upgrading cluster? [yes/no]: yes
+23:51:29 KST success: [LocalHost]
+23:51:29 KST [SetUpgradePlanModule 1/2] Set upgrade plan
+23:51:29 KST success: [LocalHost]
+23:51:29 KST [ProgressiveUpgradeModule 1/2] Calculate next upgrade version
+23:51:29 KST success: [LocalHost]
+23:51:29 KST [ProgressiveUpgradeModule 1/2] Download installation binaries
+23:51:29 KST message: [localhost]
+downloading amd64 kubeadm v1.23.17 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 41.7M  100 41.7M    0     0  17.2M      0  0:00:02  0:00:02 --:--:-- 17.2M
+23:51:32 KST message: [localhost]
+downloading amd64 kubelet v1.23.17 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  113M  100  113M    0     0  24.3M      0  0:00:04  0:00:04 --:--:-- 27.4M
+23:51:39 KST message: [localhost]
+downloading amd64 kubectl v1.23.17 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 43.0M  100 43.0M    0     0  17.4M      0  0:00:02  0:00:02 --:--:-- 17.4M
+23:51:42 KST message: [localhost]
+downloading amd64 helm v3.9.0 ...
+23:51:42 KST message: [localhost]
+helm is existed
+23:51:42 KST message: [localhost]
+downloading amd64 kubecni v1.2.0 ...
+23:51:43 KST message: [localhost]
+kubecni is existed
+23:51:43 KST message: [localhost]
+downloading amd64 crictl v1.24.0 ...
+23:51:43 KST message: [localhost]
+crictl is existed
+23:51:43 KST message: [localhost]
+downloading amd64 etcd v3.4.13 ...
+23:51:43 KST message: [localhost]
+etcd is existed
+23:51:43 KST message: [localhost]
+downloading amd64 docker 20.10.8 ...
+23:51:44 KST message: [localhost]
+docker is existed
+23:51:44 KST message: [localhost]
+downloading amd64 calicoctl v3.23.2 ...
+23:51:44 KST message: [localhost]
+calicoctl is existed
+23:51:44 KST success: [LocalHost]
+23:51:44 KST [ProgressiveUpgradeModule 1/2] Start to pull images on all nodes
+23:51:44 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/pause:3.6
+23:51:49 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-apiserver:v1.23.17
+23:52:13 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-controller-manager:v1.23.17
+23:52:33 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-scheduler:v1.23.17
+23:52:39 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-proxy:v1.23.17
+23:52:48 KST message: [kk-m2-ubuntu.example.com]
+downloading image: coredns/coredns:1.8.6
+23:52:53 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/k8s-dns-node-cache:1.15.12
+23:52:55 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/kube-controllers:v3.23.2
+23:52:57 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/cni:v3.23.2
+23:52:59 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/node:v3.23.2
+23:53:01 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/pod2daemon-flexvol:v3.23.2
+23:53:03 KST success: [kk-m2-ubuntu.example.com]
+23:53:03 KST [ProgressiveUpgradeModule 1/2] Synchronize kubernetes binaries
+23:53:09 KST success: [kk-m2-ubuntu.example.com]
+23:53:09 KST [ProgressiveUpgradeModule 1/2] Upgrade cluster on master
+23:54:51 KST success: [kk-m2-ubuntu.example.com]
+23:54:51 KST [ProgressiveUpgradeModule 1/2] Get kubernetes cluster status
+23:54:51 KST stdout: [kk-m2-ubuntu.example.com]
+v1.23.17
+23:54:51 KST stdout: [kk-m2-ubuntu.example.com]
+kk-m2-ubuntu.example.com   v1.23.17   [map[address:10.100.0.108 type:InternalIP] map[address:kk-m2-ubuntu.example.com type:Hostname]]
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+I0719 23:54:52.577026   20382 version.go:256] remote version is much newer: v1.27.3; falling back to: stable-1.23
+[upload-certs] Storing the certificates in Secret "kubeadm-certs" in the "kube-system" Namespace
+[upload-certs] Using certificate key:
+4fa25cbd27d3a15f2a19959962f18a01c04116c7d76129fab3ef2edc6c62ca1f
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+secret/kubeadm-certs patched
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+secret/kubeadm-certs patched
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+secret/kubeadm-certs patched
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+vzruyq.33djw85b8udznuai
+23:54:53 KST success: [kk-m2-ubuntu.example.com]
+23:54:53 KST [ProgressiveUpgradeModule 1/2] Upgrade cluster on worker
+23:54:53 KST skipped: [kk-m2-ubuntu.example.com]
+23:54:53 KST [ProgressiveUpgradeModule 1/2] Reconfigure CoreDNS
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+deployment.apps/coredns patched (no change)
+23:54:53 KST stdout: [kk-m2-ubuntu.example.com]
+service "kube-dns" deleted
+23:54:54 KST stdout: [kk-m2-ubuntu.example.com]
+service/coredns unchanged
+Warning: resource clusterroles/system:coredns is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+clusterrole.rbac.authorization.k8s.io/system:coredns configured
+23:54:54 KST stdout: [kk-m2-ubuntu.example.com]
+Error from server (NotFound): services "kube-dns" not found
+23:54:55 KST stdout: [kk-m2-ubuntu.example.com]
+service/coredns unchanged
+clusterrole.rbac.authorization.k8s.io/system:coredns unchanged
+23:54:55 KST stdout: [kk-m2-ubuntu.example.com]
+serviceaccount/nodelocaldns unchanged
+daemonset.apps/nodelocaldns unchanged
+23:54:55 KST success: [kk-m2-ubuntu.example.com]
+23:54:55 KST [ProgressiveUpgradeModule 1/2] Set current k8s version
+23:54:55 KST success: [LocalHost]
+23:54:55 KST [ProgressiveUpgradeModule 1/2] Calculate next upgrade version
+23:54:55 KST success: [LocalHost]
+23:54:55 KST [ProgressiveUpgradeModule 1/2] Download installation binaries
+23:54:55 KST message: [localhost]
+downloading amd64 kubeadm v1.24.9 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 42.3M  100 42.3M    0     0  16.2M      0  0:00:02  0:00:02 --:--:-- 16.2M
+23:54:58 KST message: [localhost]
+downloading amd64 kubelet v1.24.9 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  110M  100  110M    0     0  22.3M      0  0:00:04  0:00:04 --:--:-- 24.6M
+23:55:05 KST message: [localhost]
+downloading amd64 kubectl v1.24.9 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 43.6M  100 43.6M    0     0  17.2M      0  0:00:02  0:00:02 --:--:-- 17.2M
+23:55:08 KST message: [localhost]
+downloading amd64 helm v3.9.0 ...
+23:55:08 KST message: [localhost]
+helm is existed
+23:55:08 KST message: [localhost]
+downloading amd64 kubecni v1.2.0 ...
+23:55:09 KST message: [localhost]
+kubecni is existed
+23:55:09 KST message: [localhost]
+downloading amd64 crictl v1.24.0 ...
+23:55:09 KST message: [localhost]
+crictl is existed
+23:55:09 KST message: [localhost]
+downloading amd64 etcd v3.4.13 ...
+23:55:09 KST message: [localhost]
+etcd is existed
+23:55:09 KST message: [localhost]
+downloading amd64 docker 20.10.8 ...
+23:55:10 KST message: [localhost]
+docker is existed
+23:55:10 KST message: [localhost]
+downloading amd64 calicoctl v3.23.2 ...
+23:55:11 KST message: [localhost]
+calicoctl is existed
+23:55:11 KST success: [LocalHost]
+23:55:11 KST [ProgressiveUpgradeModule 1/2] Start to pull images on all nodes
+23:55:11 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/pause:3.7
+23:55:16 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-apiserver:v1.24.9
+23:55:25 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-controller-manager:v1.24.9
+23:55:44 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-scheduler:v1.24.9
+23:55:50 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/kube-proxy:v1.24.9
+23:56:05 KST message: [kk-m2-ubuntu.example.com]
+downloading image: coredns/coredns:1.8.6
+23:56:07 KST message: [kk-m2-ubuntu.example.com]
+downloading image: kubesphere/k8s-dns-node-cache:1.15.12
+23:56:09 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/kube-controllers:v3.23.2
+23:56:11 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/cni:v3.23.2
+23:56:13 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/node:v3.23.2
+23:56:15 KST message: [kk-m2-ubuntu.example.com]
+downloading image: calico/pod2daemon-flexvol:v3.23.2
+23:56:17 KST success: [kk-m2-ubuntu.example.com]
+23:56:17 KST [ProgressiveUpgradeModule 1/2] Synchronize kubernetes binaries
+23:56:29 KST success: [kk-m2-ubuntu.example.com]
+23:56:29 KST [ProgressiveUpgradeModule 1/2] Upgrade cluster on master
+23:56:37 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:56:30.242291   22997 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:56:30.242461   22997 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:56:37 KST retry: [kk-m2-ubuntu.example.com]
+23:56:47 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:56:42.856087   23378 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:56:42.856754   23378 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:56:47 KST retry: [kk-m2-ubuntu.example.com]
+23:56:58 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:56:53.622526   23904 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:56:53.623728   23904 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:56:58 KST message: [kk-m2-ubuntu.example.com]
+upgrade cluster using kubeadm failed: kk-m2-ubuntu.example.com: 
+failed: [kk-m2-ubuntu.example.com] [KubeadmUpgrade] exec failed after 3 retries: upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:56:53.622526   23904 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:56:53.623728   23904 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:56:58 KST retry: [kk-m2-ubuntu.example.com]
+23:57:09 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:04.154697   24315 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:04.154780   24315 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:57:09 KST retry: [kk-m2-ubuntu.example.com]
+23:57:19 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:14.697438   24690 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:14.697604   24690 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:57:19 KST retry: [kk-m2-ubuntu.example.com]
+23:57:30 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:25.314322   25205 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:25.314488   25205 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:57:30 KST message: [kk-m2-ubuntu.example.com]
+upgrade cluster using kubeadm failed: kk-m2-ubuntu.example.com: 
+failed: [kk-m2-ubuntu.example.com] [KubeadmUpgrade] exec failed after 3 retries: upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:25.314322   25205 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:25.314488   25205 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:57:30 KST retry: [kk-m2-ubuntu.example.com]
+23:57:41 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:35.832903   25584 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:35.833099   25584 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:57:41 KST retry: [kk-m2-ubuntu.example.com]
+23:57:52 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:47.396760   25978 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:47.396836   25978 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:57:52 KST retry: [kk-m2-ubuntu.example.com]
+23:58:03 KST message: [kk-m2-ubuntu.example.com]
+upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:58.085748   26454 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:58.085908   26454 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:58:03 KST message: [kk-m2-ubuntu.example.com]
+upgrade cluster using kubeadm failed: kk-m2-ubuntu.example.com: 
+failed: [kk-m2-ubuntu.example.com] [KubeadmUpgrade] exec failed after 3 retries: upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:58.085748   26454 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:58.085908   26454 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1
+23:58:03 KST failed: [kk-m2-ubuntu.example.com]
+error: Pipeline[UpgradeClusterPipeline] execute failed: Module[ProgressiveUpgradeModule 1/2] exec failed: 
+failed: [kk-m2-ubuntu.example.com] [UpgradeClusterOnMaster] exec failed after 3 retries: upgrade cluster using kubeadm failed: kk-m2-ubuntu.example.com: 
+failed: [kk-m2-ubuntu.example.com] [KubeadmUpgrade] exec failed after 3 retries: upgrade master failed: kk-m2-ubuntu.example.com: Failed to exec command: sudo -E /bin/bash -c "timeout -k 600s 600s /usr/local/bin/kubeadm upgrade apply v1.24.9 -y --ignore-preflight-errors=all --allow-experimental-upgrades --allow-release-candidate-upgrades --etcd-upgrade=false --certificate-renewal=true " 
+[upgrade/config] Making sure the configuration is correct:
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+W0719 23:57:58.085748   26454 initconfiguration.go:120] Usage of CRI endpoints without URL scheme is deprecated and can cause kubelet errors in the future. Automatically prepending scheme "unix" to the "criSocket" with value "/var/run/dockershim.sock". Please update your configuration!
+W0719 23:57:58.085908   26454 utils.go:69] The recommended value for "clusterDNS" in "KubeletConfiguration" is: [10.233.0.10]; the provided value is: [169.254.25.10]
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.24.9"
+[upgrade/versions] Cluster version: v1.23.17
+[upgrade/versions] kubeadm version: v1.24.9
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+crictl is required by the container runtime: exec: "crictl": executable file not found in $PATH
+To see the stack trace of this error execute with --v=5 or higher: Process exited with status 1

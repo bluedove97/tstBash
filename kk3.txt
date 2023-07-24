@@ -1,0 +1,372 @@
+#ssh-keygen
+ssh-keygen -t rsa
+touch ~/.ssh/authorized_keys
+chmod 755 ~/.ssh/authorized_keys
+
+
+alias m1='ssh -i ~/.ssh/id_rsa kk-m1-ubuntu'
+alias m2='ssh -i ~/.ssh/id_rsa kk-m2-ubuntu'
+alias w1='ssh -i ~/.ssh/id_rsa kk-w1-ubuntu'
+alias w2='ssh -i ~/.ssh/id_rsa kk-w2-ubuntu'
+
+source .profile
+
+
+#노드 정보
+Host IP	Host Name		Usage
+10.100.0.108	kk-m2-ubuntu	Online host for packaging the source cluster
+				Image registry node of the air-gapped environment
+10.100.0.107	kk-m1-ubuntu	Control plane node of the air-gapped environment
+10.100.0.109	kk-w1-ubuntu	work node of the air-gapped environment
+10.100.0.110	kk-w2-ubuntu	work node of the air-gapped environment
+
+
+#다운로드 kubekey (kk-m2-ubuntu)
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.8 sh -
+
+
+#ubuntu iso 다운로드
+mkdir download
+wget https://github.com/kubesphere/kubekey/releases/download/v3.0.8/ubuntu-20.04-debs-amd64.iso
+
+
+
+kubernetes v1.22.12
+kubesphere v3.3.2
+
+
+
+#vi manifest.yaml 수정 
+ (처음엔 docker.io로 해야 다운이 되던데)
+---
+apiVersion: kubekey.kubesphere.io/v1alpha2
+kind: Manifest
+metadata:
+  name: sample
+spec:
+  arches:
+  - amd64
+  operatingSystems:
+  - arch: amd64
+    type: linux
+    id: ubuntu
+    version: "20.04"
+    repository:
+      iso:
+        localPath: "/root/download/ubuntu-20.04-debs-amd64.iso"
+        url: ""
+  kubernetesDistributions:
+  - type: kubernetes
+    version: v1.22.12
+  components:
+    helm:
+      version: v3.9.0
+    cni:
+      version: v0.9.1
+    etcd:
+      version: v3.4.13
+   ## For now, if your cluster container runtime is containerd, KubeKey will add a docker 20.10.8 container runtime in the below list.
+   ## The reason is KubeKey creates a cluster with containerd by installing a docker first and making kubelet connect the socket file of containerd which docker contained.
+    containerRuntimes:
+    - type: docker
+      version: 20.10.8
+    - type: containerd
+      version: 1.4.9
+    crictl:
+      version: v1.24.0
+    docker-registry:
+      version: "2"
+    harbor:
+      version: v2.5.3
+    docker-compose:
+      version: v2.2.2
+  images:
+  - docker.io/kubesphere/kube-apiserver:v1.22.12
+  - docker.io/kubesphere/kube-controller-manager:v1.22.12
+  - docker.io/kubesphere/kube-proxy:v1.22.12
+  - docker.io/kubesphere/kube-scheduler:v1.22.12
+  - docker.io/kubesphere/pause:3.5
+  - docker.io/coredns/coredns:1.8.0
+  - docker.io/calico/cni:v3.23.2
+  - docker.io/calico/kube-controllers:v3.23.2
+  - docker.io/calico/node:v3.23.2
+  - docker.io/calico/pod2daemon-flexvol:v3.23.2
+  - docker.io/calico/typha:v3.23.2
+  - docker.io/kubesphere/flannel:v0.12.0
+  - docker.io/openebs/provisioner-localpv:3.3.0
+  - docker.io/openebs/linux-utils:3.3.0
+  - docker.io/library/haproxy:2.3
+  - docker.io/kubesphere/nfs-subdir-external-provisioner:v4.0.2
+  - docker.io/kubesphere/k8s-dns-node-cache:1.15.12
+  - docker.io/kubesphere/ks-installer:v3.3.2
+  - docker.io/kubesphere/ks-apiserver:v3.3.2
+  - docker.io/kubesphere/ks-console:v3.3.2
+  - docker.io/kubesphere/ks-controller-manager:v3.3.2
+  - docker.io/kubesphere/ks-upgrade:v3.3.2
+  - docker.io/kubesphere/kubectl:v1.22.0
+  - docker.io/kubesphere/kubectl:v1.21.0
+  - docker.io/kubesphere/kubectl:v1.20.0
+  - docker.io/kubesphere/kubefed:v0.8.1
+  - docker.io/kubesphere/tower:v0.2.0
+  - docker.io/minio/minio:RELEASE.2019-08-07T01-59-21Z
+  - docker.io/minio/mc:RELEASE.2019-08-07T23-14-43Z
+  - docker.io/csiplugin/snapshot-controller:v4.0.0
+  - docker.io/kubesphere/nginx-ingress-controller:v1.1.0
+  - docker.io/mirrorgooglecontainers/defaultbackend-amd64:1.4
+  - docker.io/kubesphere/metrics-server:v0.4.2
+  - docker.io/library/redis:5.0.14-alpine
+  - docker.io/library/haproxy:2.0.25-alpine
+  - docker.io/library/alpine:3.14
+  - docker.io/osixia/openldap:1.3.0
+  - docker.io/kubesphere/netshoot:v1.0
+  - docker.io/kubeedge/cloudcore:v1.9.2
+  - docker.io/kubeedge/iptables-manager:v1.9.2
+  - docker.io/kubesphere/edgeservice:v0.2.0
+  - docker.io/openpolicyagent/gatekeeper:v3.5.2
+  - docker.io/kubesphere/openpitrix-jobs:v3.3.2
+  - docker.io/kubesphere/devops-apiserver:ks-v3.3.2
+  - docker.io/kubesphere/devops-controller:ks-v3.3.2
+  - docker.io/kubesphere/devops-tools:ks-v3.3.2
+  - docker.io/kubesphere/ks-jenkins:v3.3.0-2.319.1
+  - docker.io/jenkins/inbound-agent:4.10-2
+  - docker.io/kubesphere/builder-base:v3.2.2
+  - docker.io/kubesphere/builder-nodejs:v3.2.0
+  - docker.io/kubesphere/builder-maven:v3.2.0
+  - docker.io/kubesphere/builder-maven:v3.2.1-jdk11
+  - docker.io/kubesphere/builder-python:v3.2.0
+  - docker.io/kubesphere/builder-go:v3.2.0
+  - docker.io/kubesphere/builder-go:v3.2.2-1.16
+  - docker.io/kubesphere/builder-go:v3.2.2-1.17
+  - docker.io/kubesphere/builder-go:v3.2.2-1.18
+  - docker.io/kubesphere/builder-base:v3.2.2-podman
+  - docker.io/kubesphere/builder-nodejs:v3.2.0-podman
+  - docker.io/kubesphere/builder-maven:v3.2.0-podman
+  - docker.io/kubesphere/builder-maven:v3.2.1-jdk11-podman
+  - docker.io/kubesphere/builder-python:v3.2.0-podman
+  - docker.io/kubesphere/builder-go:v3.2.0-podman
+  - docker.io/kubesphere/builder-go:v3.2.2-1.16-podman
+  - docker.io/kubesphere/builder-go:v3.2.2-1.17-podman
+  - docker.io/kubesphere/builder-go:v3.2.2-1.18-podman
+  - docker.io/kubesphere/s2ioperator:v3.2.1
+  - docker.io/kubesphere/s2irun:v3.2.0
+  - docker.io/kubesphere/s2i-binary:v3.2.0
+  - docker.io/kubesphere/tomcat85-java11-centos7:v3.2.0
+  - docker.io/kubesphere/tomcat85-java11-runtime:v3.2.0
+  - docker.io/kubesphere/tomcat85-java8-centos7:v3.2.0
+  - docker.io/kubesphere/tomcat85-java8-runtime:v3.2.0
+  - docker.io/kubesphere/java-11-centos7:v3.2.0
+  - docker.io/kubesphere/java-8-centos7:v3.2.0
+  - docker.io/kubesphere/java-8-runtime:v3.2.0
+  - docker.io/kubesphere/java-11-runtime:v3.2.0
+  - docker.io/kubesphere/nodejs-8-centos7:v3.2.0
+  - docker.io/kubesphere/nodejs-6-centos7:v3.2.0
+  - docker.io/kubesphere/nodejs-4-centos7:v3.2.0
+  - docker.io/kubesphere/python-36-centos7:v3.2.0
+  - docker.io/kubesphere/python-35-centos7:v3.2.0
+  - docker.io/kubesphere/python-34-centos7:v3.2.0
+  - docker.io/kubesphere/python-27-centos7:v3.2.0
+  - quay.io/argoproj/argocd:v2.3.3
+  - quay.io/argoproj/argocd-applicationset:v0.4.1
+  - ghcr.io/dexidp/dex:v2.30.2
+  - docker.io/library/redis:6.2.6-alpine
+  - docker.io/jimmidyson/configmap-reload:v0.5.0
+  - docker.io/prom/prometheus:v2.34.0
+  - docker.io/kubesphere/prometheus-config-reloader:v0.55.1
+  - docker.io/kubesphere/prometheus-operator:v0.55.1
+  - docker.io/kubesphere/kube-rbac-proxy:v0.11.0
+  - docker.io/kubesphere/kube-state-metrics:v2.5.0
+  - docker.io/prom/node-exporter:v1.3.1
+  - docker.io/prom/alertmanager:v0.23.0
+  - docker.io/thanosio/thanos:v0.25.2
+  - docker.io/grafana/grafana:8.3.3
+  - docker.io/kubesphere/kube-rbac-proxy:v0.8.0
+  - docker.io/kubesphere/notification-manager-operator:v1.4.0
+  - docker.io/kubesphere/notification-manager:v1.4.0
+  - docker.io/kubesphere/notification-tenant-sidecar:v3.2.0
+  - docker.io/kubesphere/elasticsearch-curator:v5.7.6
+  - docker.io/kubesphere/elasticsearch-oss:6.8.22
+  - docker.io/kubesphere/fluentbit-operator:v0.13.0
+  - docker.io/library/docker:19.03
+  - docker.io/kubesphere/fluent-bit:v1.8.11
+  - docker.io/kubesphere/log-sidecar-injector:1.1
+  - docker.io/elastic/filebeat:6.7.0
+  - docker.io/kubesphere/kube-events-operator:v0.4.0
+  - docker.io/kubesphere/kube-events-exporter:v0.4.0
+  - docker.io/kubesphere/kube-events-ruler:v0.4.0
+  - docker.io/kubesphere/kube-auditing-operator:v0.2.0
+  - docker.io/kubesphere/kube-auditing-webhook:v0.2.0
+  - docker.io/istio/pilot:1.11.1
+  - docker.io/istio/proxyv2:1.11.1
+  - docker.io/jaegertracing/jaeger-operator:1.27
+  - docker.io/jaegertracing/jaeger-agent:1.27
+  - docker.io/jaegertracing/jaeger-collector:1.27
+  - docker.io/jaegertracing/jaeger-query:1.27
+  - docker.io/jaegertracing/jaeger-es-index-cleaner:1.27
+  - docker.io/kubesphere/kiali-operator:v1.38.1
+  - docker.io/kubesphere/kiali:v1.38
+  - docker.io/library/busybox:1.31.1
+  - docker.io/library/nginx:1.14-alpine
+  - docker.io/joosthofman/wget:1.0
+  - docker.io/nginxdemos/hello:plain-text
+  - docker.io/library/wordpress:4.8-apache
+  - docker.io/mirrorgooglecontainers/hpa-example:latest
+  - docker.io/fluent/fluentd:v1.4.2-2.0
+  - docker.io/library/perl:latest
+  - docker.io/kubesphere/examples-bookinfo-productpage-v1:1.16.2
+  - docker.io/kubesphere/examples-bookinfo-reviews-v1:1.16.2
+  - docker.io/kubesphere/examples-bookinfo-reviews-v2:1.16.2
+  - docker.io/kubesphere/examples-bookinfo-details-v1:1.16.2
+  - docker.io/kubesphere/examples-bookinfo-ratings-v1:1.16.3
+  - docker.io/weaveworks/scope:1.13.0
+
+
+
+
+
+# artifact 내보내기
+./kk artifact export -m manifest.yaml -o kubesphere.tar.gz
+
+
+
+
+
+@try 1
+
+
+21:25:54 KST Destination: oci:/root/kubekey/artifact/images:kubesphere:examples-bookinfo-reviews-v1:1.16.2-amd64
+Getting image source signatures
+Copying blob 5d78be28cdcf done  
+Copying blob 131f805ec7fd done  
+Copying blob d7c3167c320d [=====================================>] 25.3MiB / 25.5MiB
+Copying blob 6ac240b13098 done  
+Copying blob 322ed380e680 done  
+Copying blob bb2dd26a7c29 done  
+Copying blob fe60638b5d13 done  
+Copying blob 57f6ea811eeb done  
+Copying blob 9d6536b10343 done  
+Copying blob e71701c3181f done  
+Copying blob 5221d34e07b3 done  
+Copying blob c09d8f6375ca done  
+Copying blob 0cc9788f62b4 done  
+Copying blob bc00c5f647b1 done  
+Copying blob 1ee8cec5163d done  
+Copying blob fb0f4c2bf428 done  
+Copying blob 2fbb631a5eee done  
+Copying blob c81c84cca7b7 done  
+21:26:10 KST message: [LocalHost]
+writing blob: happened during read: local error: tls: bad record MAC
+21:26:10 KST failed: [LocalHost]
+error: Pipeline[ArtifactExportPipeline] execute failed: Module[CopyImagesToLocalModule] exec failed: 
+failed: [LocalHost] [SaveImages] exec failed after 1 retries: writing blob: happened during read: local error: tls: bad record MAC
+
+
+
+
+
+
+
+@ try2
+
+ _   __      _          _   __           
+| | / /     | |        | | / /           
+| |/ / _   _| |__   ___| |/ /  ___ _   _ 
+|    \| | | | '_ \ / _ \    \ / _ \ | | |
+| |\  \ |_| | |_) |  __/ |\  \  __/ |_| |
+\_| \_/\__,_|_.__/ \___\_| \_/\___|\__, |
+                                    __/ |
+                                   |___/
+
+21:34:28 KST [CheckFileExist] Check output file if existed
+21:34:28 KST success: [LocalHost]
+21:34:28 KST [CopyImagesToLocalModule] Copy images to a local OCI path from registries
+21:34:28 KST Source: docker://docker.io/kubesphere/kube-apiserver:v1.22.12
+21:34:28 KST Destination: oci:/root/kubekey/artifact/images:kubesphere:kube-apiserver:v1.22.12-amd64
+21:35:03 KST message: [LocalHost]
+initializing source docker://kubesphere/kube-apiserver:v1.22.12: reading manifest v1.22.12 in docker.io/kubesphere/kube-apiserver: toomanyrequests: You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+21:35:03 KST failed: [LocalHost]
+error: Pipeline[ArtifactExportPipeline] execute failed: Module[CopyImagesToLocalModule] exec failed: 
+failed: [LocalHost] [SaveImages] exec failed after 1 retries: initializing source docker://kubesphere/kube-apiserver:v1.22.12: reading manifest v1.22.12 in docker.io/kubesphere/kube-apiserver: toomanyrequests: You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+root@kk-m2-ubuntu:~#
+
+
+
+
+
+
+
+@ try3
+
+
+22:35:23 KST Source: docker://docker.io/weaveworks/scope:1.13.0
+22:35:23 KST Destination: oci:/root/kubekey/artifact/images:weaveworks:scope:1.13.0-amd64
+Getting image source signatures
+Copying blob 6ec9be244fcd done  
+Copying blob 62f8be04715e done  
+Copying blob c9b1b535fdd9 done  
+Copying blob 6695287a1eab done  
+Copying blob 854ce511cc4c done  
+Copying blob db3f787fd829 done  
+Copying blob e12828f46b21 done  
+Copying blob ec30d5145fff done  
+Copying blob 62b02137580e done  
+Copying blob 8b97e329f4e4 done  
+Copying config 8aa54f573c done  
+Writing manifest to image destination
+Storing signatures
+22:35:34 KST success: [LocalHost]
+22:35:34 KST [ArtifactBinariesModule] Download manifest expect binaries
+22:35:34 KST message: [localhost]
+downloading amd64 kubeadm v1.22.12 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 43.7M  100 43.7M    0     0  7311k      0  0:00:06  0:00:06 --:--:-- 8361k
+22:35:41 KST message: [localhost]
+downloading amd64 kubelet v1.22.12 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  115M  100  115M    0     0  7618k      0  0:00:15  0:00:15 --:--:-- 9031k
+22:35:58 KST message: [localhost]
+downloading amd64 kubectl v1.22.12 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 44.7M  100 44.7M    0     0  7665k      0  0:00:05  0:00:05 --:--:-- 9366k
+22:36:04 KST message: [localhost]
+downloading amd64 helm v3.9.0 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 13.3M  100 13.3M    0     0  5727k      0  0:00:02  0:00:02 --:--:-- 5727k
+22:36:07 KST message: [localhost]
+downloading amd64 kubecni v0.9.1 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 37.9M  100 37.9M    0     0  4418k      0  0:00:08  0:00:08 --:--:-- 7475k
+22:36:17 KST message: [localhost]
+downloading amd64 etcd v3.4.13 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0
+100 16.5M  100 16.5M    0     0  2314k      0  0:00:07  0:00:07 --:--:-- 3578k
+22:36:24 KST message: [localhost]
+downloading amd64 calicoctl  ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100     9  100     9    0     0     17      0 --:--:-- --:--:-- --:--:--    17
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100     9  100     9    0     0     37      0 --:--:-- --:--:-- --:--:--    37
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100     9  100     9    0     0     47      0 --:--:-- --:--:-- --:--:--    47
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100     9  100     9    0     0     47      0 --:--:-- --:--:-- --:--:--    47
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100     9  100     9    0     0     24      0 --:--:-- --:--:-- --:--:--    24
+22:36:26 KST message: [LocalHost]
+Failed to download calicoctl binary: curl -L -o /root/kubekey/artifact/cni/amd64/calicoctl https://github.com/projectcalico/calico/releases/download//calicoctl-linux-amd64 error: No SHA256 found for calicoctl.  is not supported. 
+22:36:26 KST failed: [LocalHost]
+error: Pipeline[ArtifactExportPipeline] execute failed: Module[ArtifactBinariesModule] exec failed: 
+failed: [LocalHost] [DownloadBinaries] exec failed after 1 retries: Failed to download calicoctl binary: curl -L -o /root/kubekey/artifact/cni/amd64/calicoctl https://github.com/projectcalico/calico/releases/download//calicoctl-linux-amd64 error: No SHA256 found for calicoctl.  is not supported. 

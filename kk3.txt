@@ -370,3 +370,6 @@ Failed to download calicoctl binary: curl -L -o /root/kubekey/artifact/cni/amd64
 22:36:26 KST failed: [LocalHost]
 error: Pipeline[ArtifactExportPipeline] execute failed: Module[ArtifactBinariesModule] exec failed: 
 failed: [LocalHost] [DownloadBinaries] exec failed after 1 retries: Failed to download calicoctl binary: curl -L -o /root/kubekey/artifact/cni/amd64/calicoctl https://github.com/projectcalico/calico/releases/download//calicoctl-linux-amd64 error: No SHA256 found for calicoctl.  is not supported. 
+
+
+curl -L -o /root/kubekey/artifact/cni/amd64/calicoctl https://github.com/projectcalico/calico/releases/download/v3.26.1/calicoctl-linux-amd64

@@ -23,16 +23,18 @@ Host IP	Host Name		Usage
 
 #다운로드 kubekey (kk-m2-ubuntu)
 curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.8 sh -
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.7 sh -
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.9 sh -
 
 
 #ubuntu iso 다운로드
 mkdir download
 wget https://github.com/kubesphere/kubekey/releases/download/v3.0.8/ubuntu-20.04-debs-amd64.iso
+  --> /root/download/ubuntu-20.04-debs-amd64.iso
 
-
-
-kubernetes v1.22.12
-kubesphere v3.3.2
+# 설치버전
+- kubernetes v1.22.12
+- kubesphere v3.3.2
 
 
 
@@ -372,4 +374,50 @@ error: Pipeline[ArtifactExportPipeline] execute failed: Module[ArtifactBinariesM
 failed: [LocalHost] [DownloadBinaries] exec failed after 1 retries: Failed to download calicoctl binary: curl -L -o /root/kubekey/artifact/cni/amd64/calicoctl https://github.com/projectcalico/calico/releases/download//calicoctl-linux-amd64 error: No SHA256 found for calicoctl.  is not supported. 
 
 
-curl -L -o /root/kubekey/artifact/cni/amd64/calicoctl https://github.com/projectcalico/calico/releases/download/v3.26.1/calicoctl-linux-amd64
+
+
+@ try4
+
+kk v3.0.7로
+- kubernetes v1.22.12
+- kubesphere v3.3.2
+
+# artifact 내보내기
+./kk artifact export -m manifest.yaml -o kubesphere.tar.gz
+
+14:37:40 KST message: [localhost]
+downloading amd64 docker 20.10.8 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 58.1M  100 58.1M    0     0  12.6M      0  0:00:04  0:00:04 --:--:-- 12.6M
+14:37:45 KST message: [localhost]
+downloading amd64 containerd 1.4.9 ...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 29.7M  100 29.7M    0     0  10.2M      0  0:00:02  0:00:02 --:--:-- 16.1M
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 29.7M  100 29.7M    0     0  16.4M      0  0:00:01  0:00:01 --:--:-- 22.9M
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 29.7M  100 29.7M    0     0  19.6M      0  0:00:01  0:00:01 --:--:-- 28.7M
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 29.7M  100 29.7M    0     0  14.6M      0  0:00:02  0:00:02 --:--:-- 23.6M
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 29.7M  100 29.7M    0     0  14.0M      0  0:00:02  0:00:02 --:--:-- 25.1M
+14:37:56 KST message: [LocalHost]
+Failed to download containerd binary: curl -L -o /root/kubekey/artifact/containerd/1.4.9/amd64/containerd-1.4.9-linux-amd64.tar.gz https://github.com/containerd/containerd/releases/download/v1.4.9/containerd-1.4.9-linux-amd64.tar.gz error: No SHA256 found for containerd. 1.4.9 is not supported. 
+14:37:56 KST failed: [LocalHost]
+error: Pipeline[ArtifactExportPipeline] execute failed: Module[ArtifactBinariesModule] exec failed: 
+failed: [LocalHost] [DownloadBinaries] exec failed after 1 retires: Failed to download containerd binary: curl -L -o /root/kubekey/artifact/containerd/1.4.9/amd64/containerd-1.4.9-linux-amd64.tar.gz https://github.com/containerd/containerd/releases/download/v1.4.9/containerd-1.4.9-linux-amd64.tar.gz error: No SHA256 found for containerd. 1.4.9 is not supported.
+
+
+
+

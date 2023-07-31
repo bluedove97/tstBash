@@ -651,6 +651,7 @@ kk-m1-ubuntu의 메모리를 3G로 변경하고  일단 재부팅
 
 
 다음 명령을 실행하여 지정된 스크립트를 다운로드하여 Harbor 레지스트리를 초기화
+(이건 인터넷 될 때 미리 다운받아 놓자)
 curl -O https://raw.githubusercontent.com/kubesphere/ks-installer/master/scripts/create_project_harbor.sh
 
 vi create_project_harbor.sh
@@ -691,6 +692,18 @@ done
 
 
 chmod +x create_project_harbor.sh
+
+
+#그전에 모든 4개 서버에 대해 host파일에 dockerhub.kubekey.local을 등록하자
+vi /etc/hosts
+root@kk-m1-ubuntu:~# vi create_project_harbor.sh 
+root@kk-m1-ubuntu:~# nslookup dockerhub.kubekey.local
+Server:		127.0.0.53
+Address:	127.0.0.53#53
+
+Non-authoritative answer:
+Name:	dockerhub.kubekey.local
+Address: 10.100.0.108
 
 
 
@@ -751,7 +764,68 @@ done
 Core service is not available. 라고 나오면서
 안됨
 
-아우우우우웅
+
+어..저기요?
+우분투 모두 재시작하고 오니 로그인이 되네?
+아마 /etc/hosts 설정한게 재기동해야 적용되나? 흠...
+./create_project_harbor.sh 쉘도 잘 실행됨
+
+
+하버 로그인해서 프로젝트를 public으로 생성하라고 하는데
+이미 등록된 프로젝트들은 public이던데..
+test로 하나 더 public으로 등록해봄
+
+
+
+# create-cluster.yaml 한번 더 수정
+vi create-cluster.yaml
+..
+..
+  registry:
+    type: harbor
+    auths:
+      "dockerhub.kubekey.local":
+        username: admin
+        password: Harbor12345
+    privateRegistry: "dockerhub.kubekey.local"    # <---- 요기 수정
+    namespaceOverride: "kubesphereio"
+    registryMirrors: []
+    insecureRegistries: []
+  addons: []
+
+이부분 한번 더 수정
+
+
+
+
+# 이제 클러스터 생성 해보자
+./kk create cluster -f create-cluster.yaml -a kubesphere.tar.gz --with-packages
+  로그
+  쭉쭉
+..
+..
+..
+17:59:25 KST Source: oci:/root/kubekey/images:fluent:fluentd:v1.4.2-2.0-amd64
+17:59:25 KST Destination: docker://dockerhub.kubekey.local/kubesphereio/fluentd:v1.4.2-2.0-amd64
+Getting image source signatures
+Copying blob bdf0201b3a05 skipped: already exists  
+Copying blob c27acbe2fd53 skipped: already exists  
+Copying blob b586f1f6c0ef skipped: already exists  
+Copying blob 229ba8014dcc skipped: already exists  
+Copying blob 8e02f8a1e606 skipped: already exists  
+Copying config 087720d0ca done  
+Writing manifest to image destination
+Storing signatures
+17:59:25 KST message: [LocalHost]
+invalid ref name: 
+17:59:25 KST failed: [LocalHost]
+error: Pipeline[CreateClusterPipeline] execute failed: Module[CopyImagesToRegistryModule] exec failed: 
+failed: [LocalHost] [CopyImagesToRegistry] exec failed after 1 retires: invalid ref name: 
+root@kk-m1-ubuntu:~#
+  
+
+
+한번에 되느게 없구먼
 
 
 
@@ -760,24 +834,127 @@ Core service is not available. 라고 나오면서
 
 
 
-vi /etc/hosts
-root@kk-m1-ubuntu:~# vi create_project_harbor.sh 
-root@kk-m1-ubuntu:~# nslookup dockerhub.kubekey.local
-Server:		127.0.0.53
-Address:	127.0.0.53#53
 
-Non-authoritative answer:
-Name:	dockerhub.kubekey.local
-Address: 10.100.0.108
+@ try 8
+
+harbor에 주석으로 처리했던 이미지들을
+수동으로 harbor에 올려두고
+다시 시도해보려고 한다.
 
 
+docker pull docker.io/kubesphere/examples-bookinfo-productpage-v1:1.16.2
+docker pull docker.io/nginxdemos/hello:plain-text
+docker pull docker.io/library/wordpress:4.8-apache
+docker pull docker.io/kubesphere/examples-bookinfo-reviews-v1:1.16.2
+docker pull docker.io/kubesphere/examples-bookinfo-reviews-v2:1.16.2
+docker pull docker.io/kubesphere/examples-bookinfo-details-v1:1.16.2
+docker pull docker.io/kubesphere/examples-bookinfo-ratings-v1:1.16.3
+
+
+docker images
+REPOSITORY                                    TAG          IMAGE ID       CREATED         SIZE
+nginxdemos/hello                              plain-text   e3af805b298a   6 weeks ago     41.4MB
+goharbor/harbor-exporter                      v2.5.3       d9a8cfa37cf8   12 months ago   87.2MB
+goharbor/chartmuseum-photon                   v2.5.3       788b207156ad   12 months ago   225MB
+goharbor/redis-photon                         v2.5.3       5dc5331f3de8   12 months ago   154MB
+goharbor/trivy-adapter-photon                 v2.5.3       27798821348a   12 months ago   251MB
+goharbor/notary-server-photon                 v2.5.3       c686413b72ce   12 months ago   112MB
+goharbor/notary-signer-photon                 v2.5.3       a3bc1def3f94   12 months ago   109MB
+goharbor/harbor-registryctl                   v2.5.3       942de6829d43   12 months ago   136MB
+goharbor/registry-photon                      v2.5.3       fb1278854b91   12 months ago   77.9MB
+goharbor/nginx-photon                         v2.5.3       91877cbc147a   12 months ago   44.3MB
+goharbor/harbor-log                           v2.5.3       ca36fb3b68a6   12 months ago   161MB
+goharbor/harbor-jobservice                    v2.5.3       75e6a7496590   12 months ago   227MB
+goharbor/harbor-core                          v2.5.3       93a775677473   12 months ago   203MB
+goharbor/harbor-portal                        v2.5.3       d78f9bbad9ee   12 months ago   52.6MB
+goharbor/harbor-db                            v2.5.3       bd50ae1eccdf   12 months ago   224MB
+goharbor/prepare                              v2.5.3       15102b9ebde6   12 months ago   166MB
+kubesphere/examples-bookinfo-ratings-v1       1.16.3       f0ca617a01b1   2 years ago     162MB
+kubesphere/examples-bookinfo-reviews-v2       1.16.2       39cff5d782e1   3 years ago     694MB
+kubesphere/examples-bookinfo-reviews-v1       1.16.2       181be23dc1af   3 years ago     694MB
+kubesphere/examples-bookinfo-details-v1       1.16.2       edf6b9bea3db   3 years ago     149MB
+kubesphere/examples-bookinfo-productpage-v1   1.16.2       7f1e097aad6d   3 years ago     207MB
+wordpress                                     4.8-apache   fcf3e41b8864   5 years ago     408MB
+
+docker login dockerhub.kubekey.local
+
+docker tag nginxdemos/hello:plain-text dockerhub.kubekey.local/kubesphereio/hello:plain-text
+docker push dockerhub.kubekey.local/kubesphereio/hello:plain-text
+
+docker tag wordpress:4.8-apache dockerhub.kubekey.local/kubesphereio/wordpress:4.8-apache
+docker push dockerhub.kubekey.local/kubesphereio/wordpress:4.8-apache
+
+
+docker tag kubesphere/examples-bookinfo-ratings-v1:1.16.3 dockerhub.kubekey.local/kubesphereio/examples-bookinfo-ratings-v1:1.16.3
+docker push dockerhub.kubekey.local/kubesphereio/examples-bookinfo-ratings-v1:1.16.3
+
+docker tag kubesphere/examples-bookinfo-reviews-v2:1.16.2 dockerhub.kubekey.local/kubesphereio/examples-bookinfo-reviews-v2:1.16.2
+docker push dockerhub.kubekey.local/kubesphereio/examples-bookinfo-reviews-v2:1.16.2
+
+
+docker tag kubesphere/examples-bookinfo-reviews-v1:1.16.2 dockerhub.kubekey.local/kubesphereio/examples-bookinfo-reviews-v1:1.16.2
+docker push dockerhub.kubekey.local/kubesphereio/examples-bookinfo-reviews-v1:1.16.2
+
+docker tag kubesphere/examples-bookinfo-details-v1:1.16.2 dockerhub.kubekey.local/kubesphereio/examples-bookinfo-details-v1:1.16.2
+docker push dockerhub.kubekey.local/kubesphereio/examples-bookinfo-details-v1:1.16.2
+
+docker tag kubesphere/examples-bookinfo-productpage-v1:1.16.2 dockerhub.kubekey.local/kubesphereio/examples-bookinfo-productpage-v1:1.16.2
+docker push dockerhub.kubekey.local/kubesphereio/examples-bookinfo-productpage-v1:1.16.2
 
 
 
 
 
+./kk create cluster -f create-cluster.yaml -a kubesphere.tar.gz --with-packages
+| | / /     | |        | | / /           
+| |/ / _   _| |__   ___| |/ /  ___ _   _ 
+|    \| | | | '_ \ / _ \    \ / _ \ | | |
+| |\  \ |_| | |_) |  __/ |\  \  __/ |_| |
+\_| \_/\__,_|_.__/ \___\_| \_/\___|\__, |
+                                    __/ |
+                                   |___/
+
+23:31:18 KST [GreetingsModule] Greetings
+23:31:18 KST message: [kk-w2-ubuntu]
+Greetings, KubeKey!
+...
+...
+...
+23:31:19 KST [ConfirmModule] Display confirmation form
++--------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+| name         | sudo | curl | openssl | ebtables | socat | ipset | ipvsadm | conntrack | chrony | docker  | containerd | nfs client | ceph client | glusterfs client | time         |
++--------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+| kk-m1-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      | 20.10.8 | v1.4.9     |            |             |                  | KST 23:31:19 |
+| kk-m2-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      | 24.0.5  | 1.6.21     |            |             |                  | KST 23:31:19 |
+| kk-w1-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      | 20.10.8 | v1.4.9     |            |             |                  | KST 23:31:19 |
+| kk-w2-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      | 20.10.8 | v1.4.9     |            |             |                  | KST 23:31:19 |
++--------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+...
+쭉쭉 잘 가다가
+...
+
+23:32:17 KST Source: oci:/root/kubekey/images:fluent:fluentd:v1.4.2-2.0-amd64
+23:32:17 KST Destination: docker://dockerhub.kubekey.local/kubesphereio/fluentd:v1.4.2-2.0-amd64
+Getting image source signatures
+Copying blob bdf0201b3a05 skipped: already exists  
+Copying blob c27acbe2fd53 skipped: already exists  
+Copying blob b586f1f6c0ef skipped: already exists  
+Copying blob 229ba8014dcc skipped: already exists  
+Copying blob 8e02f8a1e606 skipped: already exists  
+Copying config 087720d0ca done  
+Writing manifest to image destination
+Storing signatures
+23:32:17 KST message: [LocalHost]
+invalid ref name: 
+23:32:17 KST failed: [LocalHost]
+error: Pipeline[CreateClusterPipeline] execute failed: Module[CopyImagesToRegistryModule] exec failed: 
+failed: [LocalHost] [CopyImagesToRegistry] exec failed after 1 retires: invalid ref name: 
+root@kk-m1-ubuntu:~#
 
 
+
+--- 검색어 : kubekey Module[CopyImagesToRegistryModule] exec failed 
+여기를 참고해 볼까.. https://github.com/kubesphere/kubekey/issues/1488
 
 
 

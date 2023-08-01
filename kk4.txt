@@ -1,0 +1,629 @@
+#ssh-keygen
+ssh-keygen -t rsa
+touch ~/.ssh/authorized_keys
+chmod 755 ~/.ssh/authorized_keys
+
+
+alias m1='ssh -i ~/.ssh/id_rsa kk-m1-ubuntu'
+alias m2='ssh -i ~/.ssh/id_rsa kk-m2-ubuntu'
+alias w1='ssh -i ~/.ssh/id_rsa kk-w1-ubuntu'
+alias w2='ssh -i ~/.ssh/id_rsa kk-w2-ubuntu'
+alias r1='ssh -i ~/.ssh/id_rsa kk-r1-ubuntu'
+
+source .profile
+
+
+#노드 정보
+Host IP	Host Name		Usage
+10.100.0.108	kk-m2-ubuntu	Online host for packaging the source cluster
+10.100.0.107	kk-m1-ubuntu	Control plane node of the air-gapped environment
+10.100.0.109	kk-w1-ubuntu	work node of the air-gapped environment
+10.100.0.110	kk-w2-ubuntu	work node of the air-gapped environment
+10.100.0.111	kk-r1-ubuntu	Image registry node of the air-gapped environment
+
+
+
+
+
+
+
+
+
+
+
+
+########### kk-m2-ubuntu 에서 실행 ###################
+
+
+#다운로드 kubekey (kk-m2-ubuntu)
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.7 sh -
+
+
+
+#ubuntu iso 다운로드
+mkdir download
+wget https://github.com/kubesphere/kubekey/releases/download/v3.0.8/ubuntu-20.04-debs-amd64.iso
+  --> /root/download/ubuntu-20.04-debs-amd64.iso
+
+# 설치버전
+- kubernetes v1.22.12
+- kubesphere v3.3.2
+
+
+
+#vi manifest.yaml 수정 
+---
+apiVersion: kubekey.kubesphere.io/v1alpha2
+kind: Manifest
+metadata:
+  name: sample
+spec:
+  arches:
+  - amd64
+  operatingSystems:
+  - arch: amd64
+    type: linux
+    id: ubuntu
+    version: "20.04"
+    repository:
+      iso:
+        localPath: "/root/download/ubuntu-20.04-debs-amd64.iso"
+        url: ""
+  kubernetesDistributions:
+  - type: kubernetes
+    version: v1.22.12
+  components:
+    helm:
+      version: v3.9.0
+    cni:
+      version: v0.9.1
+    etcd:
+      version: v3.4.13
+   ## For now, if your cluster container runtime is containerd, KubeKey will add a docker 20.10.8 container runtime in the below list.
+   ## The reason is KubeKey creates a cluster with containerd by installing a docker first and making kubelet connect the socket file of containerd which docker contained.
+    containerRuntimes:
+    - type: docker
+      version: 20.10.8
+    crictl:
+      version: v1.24.0
+    docker-registry:
+      version: "2"
+    harbor:
+      version: v2.5.3
+    docker-compose:
+      version: v2.2.2
+  images:
+  - docker.io/kubesphere/kube-apiserver:v1.22.12
+  - docker.io/kubesphere/kube-controller-manager:v1.22.12
+  - docker.io/kubesphere/kube-proxy:v1.22.12
+  - docker.io/kubesphere/kube-scheduler:v1.22.12
+  - docker.io/kubesphere/pause:3.5
+  - docker.io/coredns/coredns:1.8.0
+  - docker.io/calico/cni:v3.23.2
+  - docker.io/calico/kube-controllers:v3.23.2
+  - docker.io/calico/node:v3.23.2
+  - docker.io/calico/pod2daemon-flexvol:v3.23.2
+  - docker.io/calico/typha:v3.23.2
+  - docker.io/kubesphere/flannel:v0.12.0
+  - docker.io/openebs/provisioner-localpv:3.3.0
+  - docker.io/openebs/linux-utils:3.3.0
+  - docker.io/library/haproxy:2.3
+  - docker.io/kubesphere/nfs-subdir-external-provisioner:v4.0.2
+  - docker.io/kubesphere/k8s-dns-node-cache:1.15.12
+  - docker.io/kubesphere/ks-installer:v3.3.2
+  - docker.io/kubesphere/ks-apiserver:v3.3.2
+  - docker.io/kubesphere/ks-console:v3.3.2
+  - docker.io/kubesphere/ks-controller-manager:v3.3.2
+  - docker.io/kubesphere/ks-upgrade:v3.3.2
+  - docker.io/kubesphere/kubectl:v1.22.0
+  - docker.io/kubesphere/kubectl:v1.21.0
+  - docker.io/kubesphere/kubectl:v1.20.0
+  - docker.io/kubesphere/kubefed:v0.8.1
+  - docker.io/kubesphere/tower:v0.2.0
+  - docker.io/minio/minio:RELEASE.2019-08-07T01-59-21Z
+  - docker.io/minio/mc:RELEASE.2019-08-07T23-14-43Z
+  - docker.io/csiplugin/snapshot-controller:v4.0.0
+  - docker.io/kubesphere/nginx-ingress-controller:v1.1.0
+  - docker.io/mirrorgooglecontainers/defaultbackend-amd64:1.4
+  - docker.io/kubesphere/metrics-server:v0.4.2
+  - docker.io/library/redis:5.0.14-alpine
+  - docker.io/library/haproxy:2.0.25-alpine
+  - docker.io/library/alpine:3.14
+  - docker.io/osixia/openldap:1.3.0
+  - docker.io/kubesphere/netshoot:v1.0
+  - docker.io/kubeedge/cloudcore:v1.9.2
+  - docker.io/kubeedge/iptables-manager:v1.9.2
+  - docker.io/kubesphere/edgeservice:v0.2.0
+  - docker.io/openpolicyagent/gatekeeper:v3.5.2
+  - docker.io/kubesphere/openpitrix-jobs:v3.3.2
+  - docker.io/kubesphere/devops-apiserver:ks-v3.3.2
+  - docker.io/kubesphere/devops-controller:ks-v3.3.2
+  - docker.io/kubesphere/devops-tools:ks-v3.3.2
+  - docker.io/kubesphere/ks-jenkins:v3.3.0-2.319.1
+  - docker.io/jenkins/inbound-agent:4.10-2
+  - docker.io/kubesphere/builder-base:v3.2.2
+  - docker.io/kubesphere/builder-nodejs:v3.2.0
+  - docker.io/kubesphere/builder-maven:v3.2.0
+  - docker.io/kubesphere/builder-maven:v3.2.1-jdk11
+  - docker.io/kubesphere/builder-python:v3.2.0
+  - docker.io/kubesphere/builder-go:v3.2.0
+  - docker.io/kubesphere/builder-go:v3.2.2-1.16
+  - docker.io/kubesphere/builder-go:v3.2.2-1.17
+  - docker.io/kubesphere/builder-go:v3.2.2-1.18
+  - docker.io/kubesphere/builder-base:v3.2.2-podman
+  - docker.io/kubesphere/builder-nodejs:v3.2.0-podman
+  - docker.io/kubesphere/builder-maven:v3.2.0-podman
+  - docker.io/kubesphere/builder-maven:v3.2.1-jdk11-podman
+  - docker.io/kubesphere/builder-python:v3.2.0-podman
+  - docker.io/kubesphere/builder-go:v3.2.0-podman
+  - docker.io/kubesphere/builder-go:v3.2.2-1.16-podman
+  - docker.io/kubesphere/builder-go:v3.2.2-1.17-podman
+  - docker.io/kubesphere/builder-go:v3.2.2-1.18-podman
+  - docker.io/kubesphere/s2ioperator:v3.2.1
+  - docker.io/kubesphere/s2irun:v3.2.0
+  - docker.io/kubesphere/s2i-binary:v3.2.0
+  - docker.io/kubesphere/tomcat85-java11-centos7:v3.2.0
+  - docker.io/kubesphere/tomcat85-java11-runtime:v3.2.0
+  - docker.io/kubesphere/tomcat85-java8-centos7:v3.2.0
+  - docker.io/kubesphere/tomcat85-java8-runtime:v3.2.0
+  - docker.io/kubesphere/java-11-centos7:v3.2.0
+  - docker.io/kubesphere/java-8-centos7:v3.2.0
+  - docker.io/kubesphere/java-8-runtime:v3.2.0
+  - docker.io/kubesphere/java-11-runtime:v3.2.0
+  - docker.io/kubesphere/nodejs-8-centos7:v3.2.0
+  - docker.io/kubesphere/nodejs-6-centos7:v3.2.0
+  - docker.io/kubesphere/nodejs-4-centos7:v3.2.0
+  - docker.io/kubesphere/python-36-centos7:v3.2.0
+  - docker.io/kubesphere/python-35-centos7:v3.2.0
+  - docker.io/kubesphere/python-34-centos7:v3.2.0
+  - docker.io/kubesphere/python-27-centos7:v3.2.0
+  - quay.io/argoproj/argocd:v2.3.3
+  - quay.io/argoproj/argocd-applicationset:v0.4.1
+  - ghcr.io/dexidp/dex:v2.30.2
+  - docker.io/library/redis:6.2.6-alpine
+  - docker.io/jimmidyson/configmap-reload:v0.5.0
+  - docker.io/prom/prometheus:v2.34.0
+  - docker.io/kubesphere/prometheus-config-reloader:v0.55.1
+  - docker.io/kubesphere/prometheus-operator:v0.55.1
+  - docker.io/kubesphere/kube-rbac-proxy:v0.11.0
+  - docker.io/kubesphere/kube-state-metrics:v2.5.0
+  - docker.io/prom/node-exporter:v1.3.1
+  - docker.io/prom/alertmanager:v0.23.0
+  - docker.io/thanosio/thanos:v0.25.2
+  - docker.io/grafana/grafana:8.3.3
+  - docker.io/kubesphere/kube-rbac-proxy:v0.8.0
+  - docker.io/kubesphere/notification-manager-operator:v1.4.0
+  - docker.io/kubesphere/notification-manager:v1.4.0
+  - docker.io/kubesphere/notification-tenant-sidecar:v3.2.0
+  - docker.io/kubesphere/elasticsearch-curator:v5.7.6
+  - docker.io/kubesphere/elasticsearch-oss:6.8.22
+  - docker.io/kubesphere/fluentbit-operator:v0.13.0
+  - docker.io/library/docker:19.03
+  - docker.io/kubesphere/fluent-bit:v1.8.11
+  - docker.io/kubesphere/log-sidecar-injector:1.1
+  - docker.io/elastic/filebeat:6.7.0
+  - docker.io/kubesphere/kube-events-operator:v0.4.0
+  - docker.io/kubesphere/kube-events-exporter:v0.4.0
+  - docker.io/kubesphere/kube-events-ruler:v0.4.0
+  - docker.io/kubesphere/kube-auditing-operator:v0.2.0
+  - docker.io/kubesphere/kube-auditing-webhook:v0.2.0
+  - docker.io/istio/pilot:1.11.1
+  - docker.io/istio/proxyv2:1.11.1
+  - docker.io/jaegertracing/jaeger-operator:1.27
+  - docker.io/jaegertracing/jaeger-agent:1.27
+  - docker.io/jaegertracing/jaeger-collector:1.27
+  - docker.io/jaegertracing/jaeger-query:1.27
+  - docker.io/jaegertracing/jaeger-es-index-cleaner:1.27
+  - docker.io/kubesphere/kiali-operator:v1.38.1
+  - docker.io/kubesphere/kiali:v1.38
+  - docker.io/library/busybox:1.31.1
+  - docker.io/library/nginx:1.14-alpine
+  - docker.io/joosthofman/wget:1.0
+  - docker.io/nginxdemos/hello:plain-text
+  - docker.io/library/wordpress:4.8-apache
+  - docker.io/mirrorgooglecontainers/hpa-example:latest
+  - docker.io/fluent/fluentd:v1.4.2-2.0
+  - docker.io/library/perl:latest
+  - docker.io/weaveworks/scope:1.13.0
+    #  - docker.io/kubesphere/examples-bookinfo-productpage-v1:1.16.2
+    #  - docker.io/kubesphere/examples-bookinfo-reviews-v1:1.16.2
+    # - docker.io/kubesphere/examples-bookinfo-reviews-v2:1.16.2
+    #  - docker.io/kubesphere/examples-bookinfo-details-v1:1.16.2
+    #  - docker.io/kubesphere/examples-bookinfo-ratings-v1:1.16.3
+ 
+  registry:
+    auths:
+      "hub.docker.com":
+        username: bluedove
+        password: 암호호호호
+
+
+
+
+# artifact 내보내기
+./kk artifact export -m manifest.yaml -o artifact.tar.gz
+00:07:51 KST Pipeline[ArtifactExportPipeline] execute successfully
+root@kk-m2-ubuntu:~# ls -lh
+-rw-r--r-- 1 root root  11G  8월  2 00:07 artifact.tar.gz
+
+
+#kk를 master(kk-m1-ubuntu)로 복사
+root@kk-m2-ubuntu:~# scp -rp kk kubekey-v3.0.7-linux-amd64.tar.gz root@kk-m1-ubuntu:/root
+kk                                                                                           100%   75MB 138.6MB/s   00:00    
+kubekey-v3.0.7-linux-amd64.tar.gz                                                            100%   34MB 157.8MB/s   00:00
+
+
+#artifact.tar.gz를 master(kk-m1-ubuntu)로 복사
+root@kk-m2-ubuntu:~# scp -rp kubesphere.tar.gz root@kk-m1-ubuntu:/root
+
+
+###########이제부터 마스터에서 kk-m1-ubuntu 실행 ###################
+# 여기부턴 인터넷이 안된다고 가정하고 진행
+
+
+./kk create config --with-kubesphere v3.3.2 --with-kubernetes v1.22.12 -f create-cluster.yaml
+
+vi create-cluster.yaml
+apiVersion: kubekey.kubesphere.io/v1alpha2
+kind: Cluster
+metadata:
+  name: sample
+spec:
+  hosts:
+  - {name: kk-m1-ubuntu, address: 10.100.0.107, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w1-ubuntu, address: 10.100.0.109, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w2-ubuntu, address: 10.100.0.110, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-r1-ubuntu, address: 10.100.0.111, privateKeyPath: "~/.ssh/id_rsa"}
+  roleGroups:
+    etcd:
+    - kk-m1-ubuntu
+    control-plane:
+    - kk-m1-ubuntu
+    worker:
+    - kk-w1-ubuntu
+    - kk-w2-ubuntu
+    registry:
+    - kk-r1-ubuntu
+  controlPlaneEndpoint:
+    ## Internal loadbalancer for apiservers 
+    # internalLoadbalancer: haproxy
+
+    domain: lb.kubesphere.local
+    address: ""
+    port: 6443
+  kubernetes:
+    version: v1.22.12
+    clusterName: cluster.local
+    autoRenewCerts: true
+    containerManager: containerd
+  etcd:
+    type: kubekey
+  network:
+    plugin: calico
+    kubePodsCIDR: 10.233.64.0/18
+    kubeServiceCIDR: 10.233.0.0/18
+    ## multus support. https://github.com/k8snetworkplumbingwg/multus-cni
+    multusCNI:
+      enabled: false
+  registry:
+    type: harbor
+    auths:
+      "dockerhub.kubekey.local":
+        username: admin
+        password: Harbor12345
+    privateRegistry: ""
+    namespaceOverride: "kubesphereio"
+    registryMirrors: []
+    insecureRegistries: []
+  addons: []
+
+
+# 레지스트리(하버)를 설치하자
+./kk init registry -f create-cluster.yaml -a artifact.tar.gz
+
+..
+..
+..
+
+00:20:04 KST [InstallRegistryModule] Sync docker binaries
+00:20:07 KST success: [kk-r1-ubuntu]
+00:20:07 KST [InstallRegistryModule] Generate docker service
+00:20:07 KST success: [kk-r1-ubuntu]
+00:20:07 KST [InstallRegistryModule] Generate docker config
+00:20:07 KST success: [kk-r1-ubuntu]
+00:20:07 KST [InstallRegistryModule] Enable docker
+00:20:08 KST success: [kk-r1-ubuntu]
+00:20:08 KST [InstallRegistryModule] Install docker compose
+00:20:09 KST success: [kk-r1-ubuntu]
+00:20:09 KST [InstallRegistryModule] Sync harbor package
+00:20:27 KST success: [kk-r1-ubuntu]
+00:20:27 KST [InstallRegistryModule] Generate harbor service
+00:20:27 KST success: [kk-r1-ubuntu]
+00:20:27 KST [InstallRegistryModule] Generate harbor config
+00:20:27 KST success: [kk-r1-ubuntu]
+00:20:27 KST [InstallRegistryModule] start harbor
+
+Local image registry created successfully. Address: dockerhub.kubekey.local
+
+00:21:27 KST success: [kk-r1-ubuntu]
+00:21:27 KST [ChownWorkerModule] Chown ./kubekey dir
+00:21:27 KST success: [LocalHost]
+00:21:27 KST Pipeline[InitRegistryPipeline] execute successfully
+
+
+# 하버설치후 하버 웹 로그인 해보자. 아직 만들어진 프로젝트는 library밖에 없다.
+  포트포워딩 잘 세팅해서 처리
+  나의 경우 https://dockerhub.kubekey.local:4433 요렇게 처리함
+
+
+
+# 다음 명령을 실행하여 지정된 스크립트를 다운로드하여 Harbor 레지스트리를 초기화
+(이건 인터넷 될 때 미리 다운받아 놓자)
+curl -O https://raw.githubusercontent.com/kubesphere/ks-installer/master/scripts/create_project_harbor.sh
+
+
+
+
+
+./create_project_harbor.sh
+url="https://dockerhub.kubekey.local"   <--- 수정
+user="admin"
+passwd="Harbor12345"
+
+harbor_projects=(library
+    kubesphereio                        <--- 추가
+    kubesphere
+    calico
+    coredns
+    openebs
+    csiplugin
+    minio
+    mirrorgooglecontainers
+    osixia
+    prom
+    thanosio
+    jimmidyson
+    grafana
+    elastic
+    istio
+    jaegertracing
+    jenkins
+    weaveworks
+    openpitrix
+    joosthofman
+    nginxdemos
+    fluent
+    kubeedge
+)
+
+for project in "${harbor_projects[@]}"; do
+    echo "creating $project"
+    curl -u "${user}:${passwd}" -X POST -H "Content-Type: application/json" "${url}/api/v2.0/projects" -d "{ \"project_name\": \"${project}\", \"public\": true}" -k   <---- k옵션 추가
+done
+
+
+
+
+chmod +x create_project_harbor.sh
+
+
+#그전에 모든 5개 서버에 대해 host파일에 dockerhub.kubekey.local을 등록하자
+vi /etc/hosts
+
+
+#검증
+root@kk-m1-ubuntu:~# vi create_project_harbor.sh 
+root@kk-m1-ubuntu:~# nslookup dockerhub.kubekey.local
+Server:		127.0.0.53
+Address:	127.0.0.53#53
+
+Non-authoritative answer:
+Name:	dockerhub.kubekey.local
+Address: 10.100.0.111
+
+
+
+
+# create_project_harbor.sh 실행하자
+./create_project_harbor.sh 
+creating library
+{"errors":[{"code":"CONFLICT","message":"The project named library already exists"}]}
+creating kubesphereio
+creating kubesphere
+creating calico
+creating coredns
+creating openebs
+creating csiplugin
+creating minio
+creating mirrorgooglecontainers
+creating osixia
+creating prom
+creating thanosio
+creating jimmidyson
+creating grafana
+creating elastic
+creating istio
+creating jaegertracing
+creating jenkins
+creating weaveworks
+creating openpitrix
+creating joosthofman
+creating nginxdemos
+creating fluent
+creating kubeedge
+
+
+
+# create-cluster.yaml 한번 더 수정
+vi create-cluster.yaml
+..
+..
+  registry:
+    type: harbor
+    auths:
+      "dockerhub.kubekey.local":
+        username: admin
+        password: Harbor12345
+    privateRegistry: "dockerhub.kubekey.local"    # <---- 요기 수정
+    namespaceOverride: "kubesphereio"
+    registryMirrors: []
+    insecureRegistries: []
+  addons: []
+
+이부분 한번 더 수정 저장
+
+
+# 이미지 푸시
+./kk artifact image push -f create-cluster.yaml -a artifact.tar.gz
+..
+..
+00:41:21 KST Digest: sha256:20fec9b1a842f5c490cfb886e7cc96bad8ea2bd81ba7bea2bc76ddfc0dc5aa5b Length: 393
+00:41:21 KST success: [LocalHost]
+00:41:21 KST [ChownWorkerModule] Chown ./kubekey dir
+00:41:21 KST success: [LocalHost]
+00:41:21 KST Pipeline[ArtifactImagesPushPipeline] execute successfully
+
+# 푸시 성공 후, 하버에서 확인해보니
+예를 들어
+/kubesphereio/wget:1.0-amd64 와
+/kubesphereio/wget:1.0 
+이런 식으로 태그가 두개 생기게 되었다.
+
+
+
+# 이제 클러스터 생성 해보자. 푸시해놨으니 스킵방식으로 진행
+./kk create cluster -f create-cluster.yaml -a artifact.tar.gz --with-packages --skip-push-images
+
+ _   __      _          _   __           
+| | / /     | |        | | / /           
+| |/ / _   _| |__   ___| |/ /  ___ _   _ 
+|    \| | | | '_ \ / _ \    \ / _ \ | | |
+| |\  \ |_| | |_) |  __/ |\  \  __/ |_| |
+\_| \_/\__,_|_.__/ \___\_| \_/\___|\__, |
+                                    __/ |
+                                   |___/
+
+00:50:11 KST [GreetingsModule] Greetings
+00:50:11 KST message: [kk-r1-ubuntu]
+Greetings, KubeKey!
+00:50:11 KST message: [kk-w1-ubuntu]
+Greetings, KubeKey!
+00:50:12 KST message: [kk-w2-ubuntu]
+Greetings, KubeKey!
+00:50:12 KST message: [kk-m1-ubuntu]
+Greetings, KubeKey!
+00:50:12 KST success: [kk-r1-ubuntu]
+00:50:12 KST success: [kk-w1-ubuntu]
+00:50:12 KST success: [kk-w2-ubuntu]
+00:50:12 KST success: [kk-m1-ubuntu]
+00:50:12 KST [NodePreCheckModule] A pre-check on nodes
+00:50:13 KST success: [kk-r1-ubuntu]
+00:50:13 KST success: [kk-w1-ubuntu]
+00:50:13 KST success: [kk-w2-ubuntu]
+00:50:13 KST success: [kk-m1-ubuntu]
+00:50:13 KST [ConfirmModule] Display confirmation form
++--------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+| name         | sudo | curl | openssl | ebtables | socat | ipset | ipvsadm | conntrack | chrony | docker  | containerd | nfs client | ceph client | glusterfs client | time         |
++--------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+| kk-w1-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      |         | v1.6.4     |            |             |                  | KST 00:50:13 |
+| kk-w2-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      |         | v1.6.4     |            |             |                  | KST 00:50:11 |
+| kk-m1-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      |         | v1.6.4     |            |             |                  | KST 00:50:13 |
+| kk-r1-ubuntu | y    | y    | y       | y        | y     | y     | y       | y         | y      | 20.10.8 | v1.4.9     |            |             |                  | KST 00:50:13 |
++--------------+------+------+---------+----------+-------+-------+---------+-----------+--------+---------+------------+------------+-------------+------------------+--------------+
+..
+..
+..
+00:51:33 KST message: [kk-m1-ubuntu]
+pull image failed: Failed to exec command: sudo -E /bin/bash -c "env PATH=$PATH crictl pull dockerhub.kubekey.local/kubesphereio/pause:3.5" 
+E0802 00:51:33.157198    1665 remote_image.go:238] "PullImage from image service failed" err="rpc error: code = Unknown desc = failed to pull and unpack image \"dockerhub.kubekey.local/kubesphereio/pause:3.5\": failed to resolve reference \"dockerhub.kubekey.local/kubesphereio/pause:3.5\": failed to do request: Head \"https://dockerhub.kubekey.local/v2/kubesphereio/pause/manifests/3.5\": x509: certificate signed by unknown authority" image="dockerhub.kubekey.local/kubesphereio/pause:3.5"
+FATA[0000] pulling image: rpc error: code = Unknown desc = failed to pull and unpack image "dockerhub.kubekey.local/kubesphereio/pause:3.5": failed to resolve reference "dockerhub.kubekey.local/kubesphereio/pause:3.5": failed to do request: Head "https://dockerhub.kubekey.local/v2/kubesphereio/pause/manifests/3.5": x509: certificate signed by unknown authority: Process exited with status 1
+
+
+한번에 되는게 없구먼
+
+
+# 스킵빼고 다시 시도
+./kk create cluster -f create-cluster.yaml -a artifact.tar.gz --with-packages   
+같은 에러남
+
+
+개별적으로 crictl pull 해봐도 에러남
+crictl pull dockerhub.kubekey.local/kubesphereio/pause:3.5
+E0802 00:58:42.883436    2209 remote_image.go:238] "PullImage from image service failed" err="rpc error: code = Unknown desc = failed to pull and unpack image \"dockerhub.kubekey.local/kubesphereio/pause:3.5\": failed to resolve reference \"dockerhub.kubekey.local/kubesphereio/pause:3.5\": failed to do request: Head \"https://dockerhub.kubekey.local/v2/kubesphereio/pause/manifests/3.5\": x509: certificate signed by unknown authority" image="dockerhub.kubekey.local/kubesphereio/pause:3.5"
+FATA[0000] pulling image: rpc error: code = Unknown desc = failed to pull and unpack image "dockerhub.kubekey.local/kubesphereio/pause:3.5": failed to resolve reference "dockerhub.kubekey.local/kubesphereio/pause:3.5": failed to do request: Head "https://dockerhub.kubekey.local/v2/kubesphereio/pause/manifests/3.5": x509: certificate signed by unknown authority
+
+뭔가 문제가 있네..
+
+
+# create-cluster.yaml에서
+containerManager: docker로 변경하고 다시 해보자
+
+./kk create cluster -f create-cluster.yaml -a artifact.tar.gz --with-packages --skip-push-images
+
+로그 쭉쭉
+로그 쭉쭉
+쭉쭉 쭉쭉
+되나?
+
+15분뒤
+
+#####################################################
+###              Welcome to KubeSphere!           ###
+#####################################################
+
+Console: http://10.100.0.107:30880
+Account: admin
+Password: P@88w0rd
+NOTES：
+  1. After you log into the console, please check the
+     monitoring status of service components in
+     "Cluster Management". If any service is not
+     ready, please wait patiently until all components 
+     are up and running.
+  2. Please change the default password after login.
+
+#####################################################
+https://kubesphere.io             2023-08-02 01:16:36
+#####################################################
+01:16:39 KST success: [kk-m1-ubuntu]
+01:16:39 KST Pipeline[CreateClusterPipeline] execute successfully
+Installation is complete.
+
+Please check the result using the command:
+
+	kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
+
+root@kk-m1-ubuntu:~# 
+root@kk-m1-ubuntu:~# kubectl get nodes -o wide
+NAME           STATUS   ROLES                  AGE   VERSION    INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+kk-m1-ubuntu   Ready    control-plane,master   19m   v1.22.12   10.100.0.107   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   docker://20.10.8
+kk-w1-ubuntu   Ready    worker                 18m   v1.22.12   10.100.0.109   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   docker://20.10.8
+kk-w2-ubuntu   Ready    worker                 18m   v1.22.12   10.100.0.110   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   docker://20.10.8
+
+
+
+#admin 접속
+10.100.0.107:30880
+http://192.168.219.167:30880/
+
+admin / P@88w0rd
+admin / Kubesphere1
+
+
+# kubectl 자동완성
+root@kk-m1-ubuntu:~# source <(kubectl completion bash) 
+root@kk-m1-ubuntu:~# echo "source <(kubectl completion bash)" >> ~/.bashrc
+
+
+
+# guru user에게 kubectl 권한주기
+guru 로그인 상태에서
+
+mkdir -p ~/.kube
+sudo cp -i /etc/kubernetes/admin.conf ~/.kube/config
+sudo chown $(id -u):$(id -g) ~/.kube/config
+
+
+# kubectl 자동완성
+guru@kk-m1-ubuntu:~$ source <(kubectl completion bash) 
+guru@kk-m1-ubuntu:~$ echo "source <(kubectl completion bash)" >> ~/.bashrc

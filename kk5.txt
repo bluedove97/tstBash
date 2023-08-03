@@ -1,0 +1,127 @@
+#Multi-Cluster 구성
+
+#ssh-keygen
+ssh-keygen -t rsa
+touch ~/.ssh/authorized_keys
+chmod 755 ~/.ssh/authorized_keys
+
+
+alias m1='ssh -i ~/.ssh/id_rsa kk-m1-ubuntu'
+alias m2='ssh -i ~/.ssh/id_rsa kk-m2-ubuntu'
+alias m3='ssh -i ~/.ssh/id_rsa kk-m3-ubuntu'
+alias w1='ssh -i ~/.ssh/id_rsa kk-w1-ubuntu'
+alias w2='ssh -i ~/.ssh/id_rsa kk-w2-ubuntu'
+alias w3='ssh -i ~/.ssh/id_rsa kk-w3-ubuntu'
+alias r1='ssh -i ~/.ssh/id_rsa kk-r1-ubuntu'
+alias t1='ssh -i ~/.ssh/id_rsa kk-t1-ubuntu'
+
+source .profile
+
+
+#노드 정보
+Host IP	Host Name		Usage
+
+10.100.0.107	kk-m1-ubuntu
+10.100.0.108	kk-m2-ubuntu
+10.100.0.112	kk-m3-ubuntu
+10.100.0.109	kk-w1-ubuntu
+10.100.0.110	kk-w2-ubuntu
+10.100.0.113	kk-w2-ubuntu
+10.100.0.111	kk-r1-ubuntu
+10.100.0.114	kk-t1-ubuntu
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Cluster3은 퍼블릭 설치
+10.100.0.112	kk-m3-ubuntu	v1.24.9
+10.100.0.113	kk-w2-ubuntu	v1.24.9
+
+설치 완료
+10.100.0.112:30880
+192.168.219.167:30883
+admin / P@88w0rd
+admin / Kubesphere1
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Cluster1은 Air-gapped 설치
+10.100.0.107	kk-m1-ubuntu	v1.22.12
+10.100.0.109	kk-w1-ubuntu	v1.22.12
+10.100.0.111	kk-r1-ubuntu
+
+
+#kk-t1-ubuntu 에 있는 kk, artifact등을 master(kk-m1-ubuntu)로 복사
+root@kk-t1-ubuntu:~# scp -rp kk kubekey-v3.0.7-linux-amd64.tar.gz root@kk-m1-ubuntu:/root
+kk                                                                                           100%   75MB 138.6MB/s   00:00    
+kubekey-v3.0.7-linux-amd64.tar.gz                                                            100%   34MB 157.8MB/s   00:00
+
+
+#artifact.tar.gz를 master(kk-m1-ubuntu)로 복사
+root@kk-t1-ubuntu:~# scp -rp artifact.tar.gz root@kk-m1-ubuntu:/root
+
+
+
+# m1, w1으로 클러스터 구성
+k8s v1.22.12
+ks v3.3.2
+./kk create config --with-kubesphere v3.3.2 --with-kubernetes v1.22.12 -f create-cluster.yaml
+
+vi create-cluster.yaml
+
+
+
+# 이제 클러스터 생성 해보자. 이미 하버에 푸시되어 있으니 스킵방식으로 진행
+./kk create cluster -f create-cluster.yaml -a artifact.tar.gz --with-packages --skip-push-images
+
+
+
+에러난다.
+에러는 dockerhub.kubekey.local 에 로그인하려고 했는데, x509 certificate unknown authority 가 뜬 것
+admin / Harbor12345 정보도 제대로 넣었으나 인증에러가 났다.
+
+
+docker를 containerd로도 바꿔보고
+이것저것 해보다가
+docker login dockerhub.kubekey.local 도 같은에러로 안되는 것을 확인
+kk-r1-ubuntu에서는 잘 되는것을 확인
+kk-r1-ubuntu의  /etc/docker/certs.d 폴더를 각 m1, w1에 카피
+
+kk-m1-ubuntu, kk-w1-ubuntu에서도 docker login dockerhub.kubekey.local 이 잘 되는것을 확인하고 다시 진행
+
+
+# 인증서 처리 후 다시 시도
+./kk create cluster -f create-cluster.yaml -a artifact.tar.gz --with-packages --skip-push-images
+
+로그 쭉쭉
+로그 쭉쭉
+
+설치완료
+
+
+10.100.0.107:30880
+192.168.219.167:30880
+admin / P@88w0rd
+admin / Kubesphere1
+
+
+
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Cluster2는 퍼블릭 설치
+10.100.0.108	kk-m2-ubuntu	v1.22.17
+10.100.0.110	kk-w2-ubuntu	v1.22.17
+
+
+root@kk-m2-ubuntu:~# kubectl get nodes -o wide
+NAME           STATUS   ROLES                  AGE   VERSION    INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+kk-m2-ubuntu   Ready    control-plane,master   11m   v1.22.17   10.100.0.108   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   containerd://1.6.4
+kk-w2-ubuntu   Ready    worker                 11m   v1.22.17   10.100.0.110   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   containerd://1.6.4
+
+설치 완료
+10.100.0.108:30880
+192.168.219.167:30882
+admin / P@88w0rd
+admin / Kubesphere1

@@ -1,0 +1,276 @@
+ m1 107  v1.22.12  v3.3.2  master, etcd 
+ w1 109  v1.22.12  v3.3.2  worker       
+ m2 108  v1.22.17  v3.3.2  master, etcd 
+ w2 110  v1.22.17  v3.3.2  worker       
+ m3 112  v1.24.9   v3.3.2  master, etcd 
+ w3 113  v1.24.9   v3.3.2  worker       
+ r1 111  v2.5.3
+ 
+VM의 메모리때문에 기본 시스템 POD들이 제대로 안뜨는 문제가 발생.
+마스터 4G, 워커2G로 다시 시도
+
+ 
+2. Host Cluster 설정
+  1) Cluster1의 Host Cluster 세팅
+     Cluster1 master에서 clusterconfiguration의 ks-installer yaml 수정
+     --> clusterRole: host
+  2) yaml수정 후 정상작동 로그 확인
+  3) Cluster1의 ks admin webpage에 접속하여 Host Cluster 세팅이 되었는지 확인
+  4) Cluster1 master 접속 후 Host Cluster의 jwtSecret 추출
+
+	 kubectl edit cc ks-installer -n kubesphere-system
+	 clusterRole: host
+	 hostClusterName: hcluster1
+	 
+	 kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
+	 
+
+
+3. Member Cluster 설정
+  1) Cluster2의 Member Cluster 세팅 
+     Cluster2 master에서 clusterconfiguration의 ks-installer yaml 수정
+
+     --> clusterRole: member
+     --> jwtSecret: {Host Cluster에서 추출한 문자열}
+  2) yaml수정 후 정상작동 로그 확인
+  3) Cluster3의 Member Cluster 세팅 
+     Cluster3 master에서 clusterconfiguration의 ks-installer yaml 수정
+     --> clusterRole: member
+     --> jwtSecret: {Host Cluster에서 추출한 문자열}
+  4) yaml수정 후 정상작동 로그 확인
+
+
+4. Multi-Cluster 설정
+  1) Cluster2를 Member로 Import
+     Host Cluster의 ks admin webpage 접속 
+     Cluster Management 항목의 Add Cluster 클릭.
+     Cluster2의 kubeconfig 복사
+  2) Cluster3를 Member로 Import
+     Host cluster의 ks admin webpage 접속 
+     Cluster Management 항목의 Add Cluster 클릭.
+     Cluster3의 kubeconfig 복사
+  3) Multi-Cluster 구성 확인
+     Host Cluster의 ks admin webpage 의 Cluster Management 항목에서 확인
+  4) 각 클러스터 이름
+     Host Cluster : hcluster1
+     Member Cluster : mcluster2
+     Member Cluster : mcluster3
+
+
+5. Multi-Cluster 배포 테스트
+  1) Workspace ws-2 생성 (Avaliable Cluster : M-Cluster2)
+     Project pj-m2-01, pj-m2-02 생성
+     각각 nginx pod 배포 (replicas:2)
+     pod가 배포된 클러스터 및 Node 확인
+  2) Workspace ws-3 생성 (Avaliable Cluster : M-Cluster3)
+     Project pj-m3-01, pj-m3-02 생성
+     각각 nginx pod 배포 (replicas:2)
+     pod가 배포된 클러스터 및 Node 확인
+  3) Workspace ws-mber생성 (Avaliable Cluster : M-Cluster2, M-Cluster3)
+     Multi-cluster Project pj-mber-01, pj-mber-02 생성
+     각각 nginx pod 배포 (replicas:4)
+     pod가 배포된 클러스터 및 Node 확인
+
+
+multi-cluster로 배포하는 yaml은 일반 deployment와 다르다
+kubectl apply로 안되네
+
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  namespace: pj-mber-02
+  name: web-mber-02
+  labels:
+    app: web-mber-02
+  annotations:
+    kubesphere.io/description: kubesphere에서 생성
+spec:
+  placement:
+    clusters:
+      - name: mcluster2
+      - name: mcluster3
+  template:
+    metadata:
+      namespace: pj-mber-02
+      labels:
+        app: web-mber-02
+    spec:
+      replicas: 4
+      selector:
+        matchLabels:
+          app: web-mber-02
+      template:
+        metadata:
+          labels:
+            app: web-mber-02
+        spec:
+          containers:
+          - name: web-mber-02
+            image: nginx:1.14.2
+            ports:
+            - containerPort: 80
+          serviceAccount: default
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 25%
+          maxSurge: 25%
+  overrides:
+    - clusterName: mcluster2
+      clusterOverrides: []
+    - clusterName: mcluster3
+      clusterOverrides: []
+
+---
+
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  namespace: pj-mber-02
+  name: web-mber-02
+  labels:
+    app: web-mber-02
+  annotations:
+    kubesphere.io/description: kubesphere에서 생성
+spec:
+  placement:
+    clusters:
+      - name: mcluster2
+      - name: mcluster3
+  template:
+    metadata:
+      namespace: pj-mber-02
+      labels:
+        app: web-mber-02
+    spec:
+      replicas: 4
+      selector:
+        matchLabels:
+          app: web-mber-02
+      template:
+        metadata:
+          labels:
+            app: web-mber-02
+        spec:
+          containers:
+          - name: web-mber-02
+            image: nginx:1.14.2
+            ports:
+            - containerPort: 80
+          serviceAccount: default
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 25%
+          maxSurge: 25%
+  overrides:
+    - clusterName: mcluster2
+      clusterOverrides:
+        - path: /spec/replicas
+          value: 2
+    - clusterName: mcluster3
+      clusterOverrides:
+        - path: /spec/replicas
+          value: 2
+---
+
+  4) Workspace ws-all 생성 (Avaliable Cluster : H-Cluster, M-Cluster2, M-Cluster3)
+     Project pj-all-01, pj-all-02 생성
+     각각 nginx pod 배포 (replicas:6)
+     pod가 배포된 클러스터 및 Node 확인
+
+
+6. Multi-Cluster HA 테스트
+  1) M-Cluster2의 work node 강제 다운
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+  2) M-Cluster2의 work node 복원
+  3) M-Cluster3의 work node 강제 다운
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+  4) M-Cluster3의 work node 복원
+  5) H-Cluster1의 work node 강제 다운
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+  6) H-Cluster1의 work node 복원
+
+
+7. Multi-Cluster 삭제 테스트
+  1) H-Cluster1과 M-Cluster2의 클러스터 연결 삭제
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+  2) H-Cluster1과 M-Cluster3의 클러스터 연결 삭제
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+  3) 각 클러스터 연결 복원
+
+
+8. Multi-Cluster 업그레이드 테스트
+  1) H-Cluster1의 k8s 버전을 1.24.9로 업그레이드
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+  2) M-Cluster1의 k8s 버전을 1.24.9로 업그레이드
+     Project pj-m2-01, pj-m2-02의 pod 확인
+     Project pj-m3-01, pj-m3-02의 pod 확인
+     Project pj-mber-01, pj-mber-02의 pod 확인
+     Project pj-all-01, pj-all-02의 pod 확인
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+화면에서 말고 API나 기타 방법이 있는지
+Host, member cluster 설정
+member->host join
+API 찾기
+#유저 kubeconfig 가져오기
+GET /kapis/resources.kubesphere.io/v1alpha2/users/{user}/kubeconfig
+#클러스터 조회
+GET /apis/cluster.kubesphere.io/v1alpha1/clusters
+#클러스터 등록
+POST /apis/cluster.kubesphere.io/v1alpha1/clusters?dryRun=<string>&fieldManager=<string>&pretty=<string>
+ + JSON BODY
+#클러스터 등록이 멤버연결 또한 처리하는 듯 보인다.
+/apis/cluster.kubesphere.io/v1alpha1/clusters
+/apis/cluster.kubesphere.io/v1alpha1/clusters
+  post
+    io.kubesphere.kubesphere.pkg.apis.cluster.v1alpha1.Cluster
+      io.kubesphere.kubesphere.pkg.apis.cluster.v1alpha1.ClusterSpec
+        io.kubesphere.kubesphere.pkg.apis.cluster.v1alpha1.Connection
+          kubeconfig
+          kubernetesAPIEndpoint
+          kubernetesAPIServerPort
+          kubesphereAPIEndpoint
+          kubesphereAPIServerPort
+          token
+          type
+정리하면, 
+1. Host Cluster 설정은 kubectl edit를 사용하거나, yaml을 추출하여 수정 후 kubectl apply -f로 적용 
+2. Host Cluster jwtSecret은 추출하면 되고
+3. Member Cluster 설정은 kubectl edit를 사용하거나 yaml을 추출하여 수정 후 kubectl apply -f로 적용
+4. Member의 Host join 처리는 /apis/cluster.kubesphere.io/v1alpha1/clusters API를 POST로 사용하여 적용
+   전송용 BODY JSON에 어떤 값이 들어가야 하는지 분석 필요.
+   다른 조회 API를 찾아서 데이터를 맞춰 줘야 할 것 같다.

@@ -125,3 +125,226 @@ kk-w2-ubuntu   Ready    worker                 11m   v1.22.17   10.100.0.110   <
 192.168.219.167:30882
 admin / P@88w0rd
 admin / Kubesphere1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@ 에러
+
+Waiting for all tasks to be completed ...
+task network status is successful  (1/4)
+task openpitrix status is successful  (2/4)
+task monitoring status is successful  (3/4)
+task multicluster status is failed  (4/4)
+**************************************************
+Collecting installation results ...
+
+
+Task 'multicluster' failed:
+******************************************************************************************************************************************************
+{
+  "counter": 65,
+  "created": "2023-08-05T18:47:37.442093",
+  "end_line": 67,
+  "event": "runner_on_failed",
+  "event_data": {
+    "duration": 604.217412,
+    "end": "2023-08-05T18:47:37.441981",
+    "event_loop": null,
+    "host": "localhost",
+    "ignore_errors": null,
+    "play": "localhost",
+    "play_pattern": "localhost",
+    "play_uuid": "1eecb4b2-5828-bd0f-b4ea-000000000005",
+    "playbook": "/kubesphere/playbooks/multicluster.yaml",
+    "playbook_uuid": "c298ebb8-d8f7-44f8-807c-60f13af918d5",
+    "remote_addr": "127.0.0.1",
+    "res": {
+      "_ansible_no_log": false,
+      "attempts": 10,
+      "changed": true,
+      "cmd": "/usr/local/bin/helm upgrade --install kubefed /kubesphere/kubesphere/kubefed/kubefed -f /kubesphere/kubesphere/kubefed/custom-values-kubefed.yaml --namespace kube-federation-system --wait --timeout 1800s\n",
+      "delta": "0:00:00.132627",
+      "end": "2023-08-06 03:47:37.419478",
+      "invocation": {
+        "module_args": {
+          "_raw_params": "/usr/local/bin/helm upgrade --install kubefed /kubesphere/kubesphere/kubefed/kubefed -f /kubesphere/kubesphere/kubefed/custom-values-kubefed.yaml --namespace kube-federation-system --wait --timeout 1800s\n",
+          "_uses_shell": true,
+          "argv": null,
+          "chdir": null,
+          "creates": null,
+          "executable": null,
+          "removes": null,
+          "stdin": null,
+          "stdin_add_newline": true,
+          "strip_empty_ends": true,
+          "warn": true
+        }
+      },
+      "msg": "non-zero return code",
+      "rc": 1,
+      "start": "2023-08-06 03:47:37.286851",
+      "stderr": "Error: UPGRADE FAILED: another operation (install/upgrade/rollback) is in progress",
+      "stderr_lines": [
+        "Error: UPGRADE FAILED: another operation (install/upgrade/rollback) is in progress"
+      ],
+      "stdout": "",
+      "stdout_lines": []
+    },
+    "resolved_action": "command",
+    "role": "ks-multicluster",
+    "start": "2023-08-05T18:37:33.224569",
+    "task": "Kubefed | Initing kube-federation-system",
+    "task_action": "command",
+    "task_args": "",
+    "task_path": "/kubesphere/installer/roles/ks-multicluster/tasks/main.yml:51",
+    "task_uuid": "1eecb4b2-5828-bd0f-b4ea-00000000001f",
+    "uuid": "06b5c04a-463a-42b4-b4f0-443fc8d82b0f"
+  },
+  "parent_uuid": "1eecb4b2-5828-bd0f-b4ea-00000000001f",
+  "pid": 8895,
+  "runner_ident": "multicluster",
+  "start_line": 66,
+  "stdout": "fatal: [localhost]: FAILED! => {\"attempts\": 10, \"changed\": true, \"cmd\": \"/usr/local/bin/helm upgrade --install kubefed /kubesphere/kubesphere/kubefed/kubefed -f /kubesphere/kubesphere/kubefed/custom-values-kubefed.yaml --namespace kube-federation-system --wait --timeout 1800s\\n\", \"delta\": \"0:00:00.132627\", \"end\": \"2023-08-06 03:47:37.419478\", \"msg\": \"non-zero return code\", \"rc\": 1, \"start\": \"2023-08-06 03:47:37.286851\", \"stderr\": \"Error: UPGRADE FAILED: another operation (install/upgrade/rollback) is in progress\", \"stderr_lines\": [\"Error: UPGRADE FAILED: another operation (install/upgrade/rollback) is in progress\"], \"stdout\": \"\", \"stdout_lines\": []}",
+  "uuid": "06b5c04a-463a-42b4-b4f0-443fc8d82b0f"
+}
+******************************************************************************************************************************************************
+
+
+
+
+# Cluster1에 Host Cluster 세팅
+
+ kubectl edit cc ks-installer -n kubesphere-system
+ clusterRole: host
+ hostClusterName: hcluster1  <--- 요거 이름 대문자 특수문자 안되는듯
+ 
+ kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
+	 
+
+
+
+
+kube-federation-system         kubefed-admission-webhook-6f9f5dcbbf-mgscx         1/1     Running   0               3m31s
+kube-federation-system         kubefed-controller-manager-77fbf668b8-t94kg        1/1     Running   0               2m59s
+kubesphere-system              tower-786bb99f5d-cnzkj                             1/1     Running   0               3m41s
+
+3개의 파드가 추가로 생기는데
+Pending 된다.
+메모리 부족인건지.. VM사양 부족인건지
+
+그래서 
+kubesphere-monitoring-system   prometheus-k8s-0                                   0/2     Pending
+를 죽여서 위의 3개 파드는 생성되고
+prometheus-k8s-0 는 Pending되게 만들었다.
+
+prometheus-k8s-0을 지우니, 노드, 파드 현황이 안보여서
+kubesphere-monitoring-system   alertmanager-main-0                                0/2     Pending   0
+를 지우는것으로 해봄
+
+
+
+
+# Cluster2에 Member Cluster 세팅
+멤버설정할 때는 Pending 되는 것은 없더라
+host 설정과는 다르게 kube-federation-system 과 tower pod가 추가되거나 하진 않아서 그런 것 같음
+
+kubectl edit cc ks-installer -n kubesphere-system
+jwtSecret: 1bCScmByJYU13hm6MwIBnEwCuQ1Ofwa8
+clusterRole: member
+
+
+
+
+
+# Cluster3에 Member Cluster 세팅
+Cluster3는 다른 PC에 설정함. 노트북의 사양이 딸려서 3번째 클러스터를 올리는 것은 불가능하더라
+Cluster3 역시 VM으로 올렸고
+Cluster1 master에서 Cluster3 master로 접근 할 수 있게 port-forwarding 처리 함
+
+
+kubectl edit cc ks-installer -n kubesphere-system
+jwtSecret: 1bCScmByJYU13hm6MwIBnEwCuQ1Ofwa8
+clusterRole: member
+
+
+
+Start installing monitoring
+Start installing multicluster
+Start installing openpitrix
+Start installing network
+**************************************************
+Waiting for all tasks to be completed ...
+task network status is successful  (1/4)
+task openpitrix status is successful  (2/4)
+task multicluster status is successful  (3/4)
+task monitoring status is successful  (4/4)
+**************************************************
+Collecting installation results ...
+#####################################################
+###              Welcome to KubeSphere!           ###
+#####################################################
+
+Console: http://10.100.0.112:30880
+Account: admin
+Password: P@88w0rd
+NOTES：
+  1. After you log into the console, please check the
+     monitoring status of service components in
+     "Cluster Management". If any service is not
+     ready, please wait patiently until all components 
+     are up and running.
+  2. Please change the default password after login.
+
+#####################################################
+https://kubesphere.io             2023-08-06 16:14:55
+####################################################
+
+
+
+# 이제 Add Cluster 해보자
+
+
+
+
+
+
+Get "https://192.168.219.146:6443/api/v1/namespaces/kube-system?timeout=10s": x509: certificate is valid for 10.233.0.1, 10.100.0.112, 127.0.0.1, 10.100.0.113, not 192.168.219.146
+
+악.. 서로 다른 네트워크 대역대여서
+Cluster3의 kubeconfig 가져올때 에러가 난다.
+
+요걸 참고해서
+https://happycloud-lee.tistory.com/235
+kubeconfig에 허용 ip를 추가하자
+
+
+된다.. 눈물 ㅠㅠ
+
+
+
+Host
+
+

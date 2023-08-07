@@ -274,3 +274,66 @@ POST /apis/cluster.kubesphere.io/v1alpha1/clusters?dryRun=<string>&fieldManager=
 4. Member의 Host join 처리는 /apis/cluster.kubesphere.io/v1alpha1/clusters API를 POST로 사용하여 적용
    전송용 BODY JSON에 어떤 값이 들어가야 하는지 분석 필요.
    다른 조회 API를 찾아서 데이터를 맞춰 줘야 할 것 같다.
+   
+   
+-----------------------------------------------------------------------------------------------
+
+테스트 확인 한 결과 추가내용 필요
+
+#VM 스냅샷
+일단 VM을 현재버전으로 스냅샷을 뜨고
+
+#멀티클러스터 배포시
+일반 kubectl deployment 로는 배포가 안되더라.  
+  apiVersion: types.kubefed.io/v1beta1
+  kind: FederatedDeployment
+이걸 host에서 해본적은 없는데, host에서 해보자. 
+host master에 fed관련 controller로 깔려있으니 될거같기도.
+
+그리고 추가 정리 필요 
+  1) 하나의 클러스터에만 4개의 pod를 배포하는 방법
+  2) 2개의 클러스터에 4개의 pod를 2개씩 배포하는 방법
+  3) 하나의 클러스터에만 6개의 pod를 배포하는 방법
+  3) 3개의 클러스터에 6개의 pod를 2개씩 배포하는 방법
+
+배포테스트를 좀 더 정리해볼까
+ws-mber 생성 절차
+  이것은 mcluster2와 mcluster3을 바운더리로 갖는 workspace인 것이여
+  캡쳐
+
+multi-cluster project pj-mber-01, pj-mber-02 생성
+  kubectl로 ns가 동시에 생성 된 것을 보여주고
+  UI에서 어떻게 보이는지도 보여주고
+
+workload 생성
+  kubectl로 host master에서 된다면..
+  안된다면 ui에서..
+  1) 하나의 클러스터에만 4개의 pod를 배포하는 방법
+  2) 2개의 클러스터에 4개의 pod를 2개씩 배포하는 방법
+  kubectl 결과 캡쳐
+  화면 캡쳐
+  labels:
+    app.kubernetes.io/name: nginx  <-- 워크로드 생성시 레이블을 넣어줘보자
+
+
+#멀티클러스터 HA
+cluster2를 먹통만들더라도, cluster3으로 pod가 옮겨가거나 하진 않더라
+멀티클러스터의 고가용성은, 
+노드다운시 다른 노드로 파드가 옮겨가는, 파드의 실행을 보장하는 고가용성과는 다름.
+여러 지역마다 클러스터를 운영하면서, 
+각각의 클러스터에 파드를 동시에 배포했을 때,
+하나의 클러스터가 다운되더라도 다른 클러스터들은 서비스가 가능한 고가용성을 의미
+
+
+#멀티클러스터 삭제
+클러스터 삭제
+예상) 더이상 Host에서 컨트롤을 안되지만, 이미 기동되어있는 파드들은 동작한다
+
+
+#클러스터 업그레이드
+VM을 3G로 바꾸고
+107, 109, 108, 110서버에 각각 도커 설치
+hcluster1 업그레이드 후, POD들의 상태 확인
+mcluster2 업그레이드 후, pod들의 상태 확인
+   
+   

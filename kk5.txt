@@ -345,6 +345,83 @@ kubeconfig에 허용 ip를 추가하자
 
 
 
-Host
+
+
+
+
+******************************************************************************************************************************************************
+
+
+# Cluster2(mcluster1)의 버전을 v1.22.17 에서 v1.24.9로 upgrade
+
+업그레이드를 위해 도커를 설치하자. kk-m2-ubuntu와 kk-w2-ubuntu에 각각 설치
+
+apt-get update
+apt-get install ca-certificates gnupg lsb-release
+
+Add Docker’s official GPG key
+  sudo mkdir -p /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+Set up the repository:
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+Install Docker Engine
+  sudo apt-get update
+  sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+ 
+# cluster 업그레이드. kk-m2-ubuntu에서 실행
+# kubekey로 kubernetes의 버전을 v1.22.17 에서 v1.24.9 로 업그레이드
+
+
+./kk create config --from-cluster 로 구성 파일 생성
+mv sample.yaml upgrade-cluster.yaml
+
+vi upgrade-cluster.yaml  <---- ssh 정보, 버전정보, etcd 정보 수정하고 
+
+
+./kk upgrade --with-kubernetes v1.24.9  -f upgrade-cluster.yaml
+
+
+어어어...에러?? 
+panic: illegal version string "24..5"
+
+goroutine 198 [running]:
+k8s.io/apimachinery/pkg/util/version.MustParseSemantic({0xc00096a970?, 0x6?})
+	k8s.io/apimachinery@v0.25.4/pkg/util/version/version.go:119 +0x45
+github.com/kubesphere/kubekey/v3/cmd/kk/pkg/bootstrap/confirm.(*UpgradeConfirm).Execute(0xc0001c2af8, {0x27545f0, 0xc000331200})
+	github.com/kubesphere/kubekey/v3/cmd/kk/pkg/bootstrap/confirm/tasks.go:218 +0xddf
+github.com/kubesphere/kubekey/v3/cmd/kk/pkg/core/task.(*LocalTask).ExecuteWithRetry(0xc0000cafd0, {0x27545f0, 0xc000331200}, {0x275a6f8, 0xc00022f980})
+	github.com/kubesphere/kubekey/v3/cmd/kk/pkg/core/task/local_task.go:205 +0x126
+github.com/kubesphere/kubekey/v3/cmd/kk/pkg/core/task.(*LocalTask).Run(0xc0000cafd0, {0x27545f0, 0xc000331200}, {0x275a6f8?, 0xc00022f980}, 0x0?)
+	github.com/kubesphere/kubekey/v3/cmd/kk/pkg/core/task/local_task.go:159 +0x225
+created by github.com/kubesphere/kubekey/v3/cmd/kk/pkg/core/task.(*LocalTask).RunWithTimeout
+	github.com/kubesphere/kubekey/v3/cmd/kk/pkg/core/task/local_task.go:121 +0x172
+
+
+도커때문인가 최신 도커로 설치했을 때 24.05 버전이었음
+도커 다시 지우고 20.10 버전으로 다시 설치해보자
+24.05 버전.. 왠지 찝찝하다
+
+
+도커 설치가능버전 확인
+apt-cache madison docker-ce
+
+20.10의 마지막버전으로 해보자
+
+apt-get install docker-ce=5:20.10.24~3-0~ubuntu-focal docker-ce-cli=5:20.10.24~3-0~ubuntu-focal containerd.io docker-compose-plugin
+
+docker --version 하니 20.10 으로 나오고
+
+
+업그레이드 재도전
+./kk upgrade --with-kubernetes v1.24.9  -f upgrade-cluster.yaml
+
+
+아까와는 다르게 진행되는 듯.
+
 
 

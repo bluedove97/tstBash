@@ -1,0 +1,330 @@
+#k8s 설치 후 kubesphere 따로 설치하기
+
+#ssh-keygen
+ssh-keygen -t rsa
+touch ~/.ssh/authorized_keys
+chmod 755 ~/.ssh/authorized_keys
+
+
+
+alias m3='ssh -i ~/.ssh/id_rsa kk-m3-ubuntu'
+alias w3='ssh -i ~/.ssh/id_rsa kk-w3-ubuntu'
+alias r1='ssh -i ~/.ssh/id_rsa kk-r1-ubuntu'
+
+source .profile
+
+
+#노드 정보
+Host IP	Host Name		Usage
+
+
+10.100.0.112	kk-m3-ubuntu
+10.100.0.113	kk-w2-ubuntu
+10.100.0.111	kk-r1-ubuntu
+
+
+# - - - - - - 스냅샷- - - - - - - #
+
+
+
+
+
+
+# - - - - - - 퍼블릭 k8s 설치 (kubesphere 빼고 설치) - - - - - - - #
+
+# 마스터와 워커노드에 아래 설치
+apt-get update
+apt-get install -y socat conntrack ebtables ipset
+
+
+
+#다운로드 kubekey  
+curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.7 sh -
+chmod +x kk
+
+
+
+
+# create config 파일 생성
+./kk create config --with-kubernetes v1.24.9
+mv config-sample.yaml create-k8s.yaml
+vi create-k8s.yaml
+
+  - {name: kk-m3-ubuntu, address: 10.100.0.112, privateKeyPath: "~/.ssh/id_rsa"}
+  - {name: kk-w3-ubuntu, address: 10.100.0.113, privateKeyPath: "~/.ssh/id_rsa"}
+
+
+10.100.0.112	kk-m3-ubuntu	v1.24.9
+10.100.0.113	kk-w2-ubuntu	v1.24.9
+
+
+
+#create cluster
+./kk create cluster -f create-k8s.yaml
+
+
+
+
+# 설치 완료
+Please check the result using the command:
+		
+	kubectl get pod -A
+
+
+root@kk-m3-ubuntu:~# kubectl get pod -A
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
+kube-system   calico-kube-controllers-5cc4cdb7ff-jbrl5   1/1     Running   0          92s
+kube-system   calico-node-fhpdm                          1/1     Running   0          93s
+kube-system   calico-node-gpcmn                          1/1     Running   0          93s
+kube-system   coredns-fb4b8cf5c-5zrkv                    1/1     Running   0          111s
+kube-system   coredns-fb4b8cf5c-rskgq                    1/1     Running   0          111s
+kube-system   kube-apiserver-kk-m3-ubuntu                1/1     Running   0          2m3s
+kube-system   kube-controller-manager-kk-m3-ubuntu       1/1     Running   0          2m3s
+kube-system   kube-proxy-2mztw                           1/1     Running   0          96s
+kube-system   kube-proxy-xbgcd                           1/1     Running   0          112s
+kube-system   kube-scheduler-kk-m3-ubuntu                1/1     Running   0          2m3s
+kube-system   nodelocaldns-b4dfl                         1/1     Running   0          96s
+kube-system   nodelocaldns-vwzw5                         1/1     Running   0          112s
+
+
+root@kk-m3-ubuntu:~# kubectl get nodes -o wide
+NAME           STATUS   ROLES           AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+kk-m3-ubuntu   Ready    control-plane   2m30s   v1.24.9   10.100.0.112   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   containerd://1.6.4
+kk-w3-ubuntu   Ready    worker          115s    v1.24.9   10.100.0.113   <none>        Ubuntu 20.04.5 LTS   5.15.0-76-generic   containerd://1.6.4
+
+
+
+
+# - - - - - - kubesphere(v3.3.2) 설치 - - - - - - - #
+
+
+wget https://github.com/kubesphere/ks-installer/releases/download/v3.3.2/kubesphere-installer.yaml
+
+wget https://github.com/kubesphere/ks-installer/releases/download/v3.3.2/cluster-configuration.yaml
+
+
+#실행하자
+kubectl apply -f https://github.com/kubesphere/ks-installer/releases/download/v3.3.2/kubesphere-installer.yaml
+
+kubectl apply -f https://github.com/kubesphere/ks-installer/releases/download/v3.3.2/cluster-configuration.yaml
+
+
+
+#로그 확인
+kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
+
+
+# 한번에 되는게 없음..  에러
+TASK [preinstall : KubeSphere | Checking StorageClass] *************************
+changed: [localhost]
+
+TASK [preinstall : KubeSphere | Stopping if StorageClass was not found] ********
+skipping: [localhost]
+
+TASK [preinstall : KubeSphere | Checking default StorageClass] *****************
+changed: [localhost]
+
+TASK [preinstall : KubeSphere | Stopping if default StorageClass was not found] ***
+fatal: [localhost]: FAILED! => {
+    "assertion": "\"(default)\" in default_storage_class_check.stdout",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Default StorageClass was not found !"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=2    unreachable=0    failed=1    skipped=4    rescued=0    ignored=0
+
+
+
+
+검색해보니
+1、install any storageclass
+2、kubectl patch storageclass <sc_name> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+3、 kubectl get sc
+
+
+```
+Works for me:
+
+cat > sc.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: default-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+kubectl apply -f sc.yaml
+
+and then delete the pod in kubesphere-system. and it will go on.
+
+```
+
+
+# 다시 로그 확인
+
+Start installing monitoring
+Start installing multicluster
+Start installing openpitrix
+Start installing network
+**************************************************
+Waiting for all tasks to be completed ...
+task network status is successful  (1/4)
+task openpitrix status is successful  (2/4)
+task multicluster status is successful  (3/4)
+task monitoring status is successful  (4/4)
+**************************************************
+Collecting installation results ...
+#####################################################
+###              Welcome to KubeSphere!           ###
+#####################################################
+
+Console: http://10.100.0.112:30880
+Account: admin
+Password: P@88w0rd
+NOTES：
+  1. After you log into the console, please check the
+     monitoring status of service components in
+     "Cluster Management". If any service is not
+     ready, please wait patiently until all components 
+     are up and running.
+  2. Please change the default password after login.
+
+#####################################################
+https://kubesphere.io             2023-08-20 15:00:58
+#####################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+# - - - - - - 에어갭 설치 해보자 - - - - - - - #
+
+
+k8s 만 설치되어있는 상태에서 진행
+
+
+마스터와 워커에 도커 20.10 설치
+apt-get update
+apt-get install ca-certificates gnupg lsb-release
+
+Add Docker’s official GPG key
+  sudo mkdir -p /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+Set up the repository:
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+Install Docker Engine
+  apt-get update
+
+도커 설치가능버전 확인
+apt-cache madison docker-ce
+
+20.10의 마지막버전으로 해보자
+apt-get install docker-ce=5:20.10.24~3-0~ubuntu-focal docker-ce-cli=5:20.10.24~3-0~ubuntu-focal containerd.io docker-compose-plugin
+
+docker --version 하니 20.10 으로 나오고
+
+
+
+인증서 관련
+kk-r1-ubuntu의  /etc/docker/certs.d 폴더를 각 m1, w1에 카피
+
+scp -rp certs.d root@kk-m3-ubuntu:/etc/docker
+scp -rp certs.d root@kk-w3-ubuntu:/etc/docker
+
+
+
+#배포파일 다운로드
+curl -L -O https://github.com/kubesphere/ks-installer/releases/download/v3.3.2/cluster-configuration.yaml
+curl -L -O https://github.com/kubesphere/ks-installer/releases/download/v3.3.2/kubesphere-installer.yaml
+
+
+# cluster-configuration.yaml 수정
+.spec.local_registry의 값을 dockerhub.kubekey.local 로 수정
+
+# kubesphere-installer.yaml 수정
+image: dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2 로 수정
+
+
+
+kubectl apply -f kubesphere-installer.yaml
+kubectl apply -f cluster-configuration.yaml
+
+
+에러
+Error from server (BadRequest): container "installer" in pod "ks-installer-7d5fb7bf64-wgd2r" is waiting to start: trying and failing to pull image
+
+
+root@kk-m3-ubuntu:~# kubectl get pod -A
+NAMESPACE           NAME                                       READY   STATUS             RESTARTS      AGE
+kube-system         calico-kube-controllers-5cc4cdb7ff-jbrl5   1/1     Running            3 (26m ago)   6h7m
+kube-system         calico-node-fhpdm                          1/1     Running            2 (27m ago)   6h7m
+kube-system         calico-node-gpcmn                          1/1     Running            2 (26m ago)   6h7m
+kube-system         coredns-fb4b8cf5c-5zrkv                    1/1     Running            2 (27m ago)   6h7m
+kube-system         coredns-fb4b8cf5c-rskgq                    1/1     Running            2 (27m ago)   6h7m
+kube-system         kube-apiserver-kk-m3-ubuntu                1/1     Running            2 (27m ago)   6h7m
+kube-system         kube-controller-manager-kk-m3-ubuntu       1/1     Running            2 (27m ago)   6h7m
+kube-system         kube-proxy-2mztw                           1/1     Running            2 (26m ago)   6h7m
+kube-system         kube-proxy-xbgcd                           1/1     Running            2 (27m ago)   6h7m
+kube-system         kube-scheduler-kk-m3-ubuntu                1/1     Running            2 (27m ago)   6h7m
+kube-system         nodelocaldns-b4dfl                         1/1     Running            2 (26m ago)   6h7m
+kube-system         nodelocaldns-vwzw5                         1/1     Running            2 (27m ago)   6h7m
+kubesphere-system   ks-installer-7d5fb7bf64-wgd2r              0/1     ImagePullBackOff   0             6s
+
+root@kk-m3-ubuntu:~# kubectl describe pod ks-installer-7d5fb7bf64-wgd2r -n kubesphere-system
+...
+...
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  33s                default-scheduler  Successfully assigned kubesphere-system/ks-installer-7d5fb7bf64-wgd2r to kk-w3-ubuntu
+  Normal   Pulling    20s (x2 over 32s)  kubelet            Pulling image "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2"
+  Warning  Failed     20s (x2 over 32s)  kubelet            Failed to pull image "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2": rpc error: code = Unknown desc = failed to pull and unpack image "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2": failed to resolve reference "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2": failed to do request: Head "https://dockerhub.kubekey.local/v2/kubesphereio/ks-installer/manifests/v3.3.2": x509: certificate signed by unknown authority
+  Warning  Failed     20s (x2 over 32s)  kubelet            Error: ErrImagePull
+  Normal   BackOff    5s (x3 over 32s)   kubelet            Back-off pulling image "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2"
+  Warning  Failed     5s (x3 over 32s)   kubelet            Error: ImagePullBackOff
+
+
+
+흠.....에러네
+
+crictl pull dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2
+해봤는데 에러남
+E0820 20:16:32.050933   42854 remote_image.go:238] "PullImage from image service failed" err="rpc error: code = Unknown desc = failed to pull and unpack image \"dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2\": failed to resolve reference \"dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2\": failed to do request: Head \"https://dockerhub.kubekey.local/v2/kubesphereio/ks-installer/manifests/v3.3.2\": x509: certificate signed by unknown authority" image="dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2"
+FATA[0000] pulling image: rpc error: code = Unknown desc = failed to pull and unpack image "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2": failed to resolve reference "dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2": failed to do request: Head "https://dockerhub.kubekey.local/v2/kubesphereio/ks-installer/manifests/v3.3.2": x509: certificate signed by unknown authority
+
+
+참고1
+https://stackoverflow.com/questions/73415766/how-to-skip-tls-cert-check-for-crictl-containerd-cr-while-pulling-the-images-f
+
+참고2
+https://github.com/containerd/containerd/blob/main/docs/hosts.md 참고하고
+
+
+1. create folders: mkdir -p /etc/containerd/certs.d/<your registry>
+2. add these config in /etc/containerd/config.toml:
+   [plugins."io.containerd.grpc.v1.cri".registry]
+     config_path = "/etc/containerd/certs.d"
+3. create and edit hosts.toml under the just created folder
+     server = "https://<your registry>"
+     
+     [host."https://<your registry>"]
+     capabilities = ["pull", "resolve"]
+     skip_verify = true
+
+

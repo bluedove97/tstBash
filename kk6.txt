@@ -328,3 +328,172 @@ https://github.com/containerd/containerd/blob/main/docs/hosts.md 참고하고
      skip_verify = true
 
 
+
+아니야! 위의걸로는 해결 되지 않아!
+/etc/containerd/config.toml을 아래의 걸로 수정하자
+
+https://ikcoo.tistory.com/230
+
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."dockerhub.kubekey.local"]
+          endpoint = ["https://dockerhub.kubekey.local"]
+      [plugins."io.containerd.grpc.v1.cri".registry.configs]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."dockerhub.kubekey.local".auth]
+          username = "admin"
+          password = "Harbor12345"
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."dockerhub.kubekey.local".tls]
+          insecure_skip_verify = true
+
+수정후
+systemctl stop containerd.service
+systemctl start containerd.service
+
+
+crictl pull dockerhub.kubekey.local/kubesphereio/ks-installer:v3.3.2 해보니까 이제 됨
+
+마스터 노드 둘다 세팅해준다.
+
+
+참고로 이건 전자 내부 것
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = ""
+      [plugins."io.containerd.grpc.v1.cri".registry.auths]
+        [plugins."io.containerd.grpc.v1.cri".registry.auths."dockerhub.kubekey.local"]
+          username = "user"
+          password = "pwd"
+      [plugins."io.containerd.grpc.v1.cri".registry.configs]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."dockerhub.kubekey.local"]
+          [plugins."io.containerd.grpc.v1.cri".registry.configs."dockerhub.kubekey.local".tls]
+            ca_file = ""
+            cert_file = ""
+            key_file =  ""
+          #insecure_skip_verify = true
+      [plugins."io.containerd.grpc.v1.cri".registry.headers]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."*"]
+          endpoint = [ "https://dockerhub.kubekey.local" ]
+    [plugins."io.containerd.grpc.v1.cri".x509_key_pair_streaming]
+      tls_cert_file = ""
+      tls_key_file = ""
+  [plugins."io.containerd.internal.v1.opt"]
+    path = "/opt/containerd"
+
+
+
+# crictl pull을 해결했으니 다시 설치 재도전
+kubectl apply -f kubesphere-installer.yaml
+kubectl apply -f cluster-configuration.yaml
+
+
+# 로그 확인
+kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
+
+
+# 진행되는데.. 와... public과 똑같이 에러가
+TASK [preinstall : KubeSphere | Checking StorageClass] *************************
+changed: [localhost]
+
+TASK [preinstall : KubeSphere | Stopping if StorageClass was not found] ********
+skipping: [localhost]
+
+TASK [preinstall : KubeSphere | Checking default StorageClass] *****************
+changed: [localhost]
+
+TASK [preinstall : KubeSphere | Stopping if default StorageClass was not found] ***
+fatal: [localhost]: FAILED! => {
+    "assertion": "\"(default)\" in default_storage_class_check.stdout",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Default StorageClass was not found !"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=2    unreachable=0    failed=1    skipped=4    rescued=0    ignored=0 
+
+
+
+# public에서 한거처럼 pvc관련 처리를 해주자
+
+```
+cat > sc.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: default-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+kubectl apply -f sc.yaml
+
+and then delete the pod in kubesphere-system. and it will go on.
+
+```
+
+kubectl delete pod -n kubesphere-system ks-installer-7d5fb7bf64-mp9lq
+
+
+# 로그 다시 확인
+진행된다
+진행된다
+진행된다
+
+Start installing monitoring
+Start installing multicluster
+Start installing openpitrix
+Start installing network
+**************************************************
+Waiting for all tasks to be completed ...
+task multicluster status is successful  (1/4)
+task openpitrix status is successful  (2/4)
+task network status is successful  (3/4)
+task monitoring status is successful  (4/4)
+**************************************************
+Collecting installation results ...
+
+엥?
+엥??
+엥???
+거의 다 왔는데.. 진행이 안되네
+
+
+파드 확인해보자
+kube-system                    snapshot-controller-0                            0/1     ImagePullBackOff   0             11m
+kubesphere-controls-system     default-http-backend-7d8647b95d-598rc            0/1     ImagePullBackOff   0             10m
+kubesphere-monitoring-system   kube-state-metrics-65cc7c8844-kcwg7              0/3     ImagePullBackOff   0             7m59s
+kubesphere-monitoring-system   node-exporter-27mqn                              0/2     ImagePullBackOff   0             8m1s
+kubesphere-monitoring-system   node-exporter-wmhmh                              0/2     ImagePullBackOff   0             8m1s
+kubesphere-monitoring-system   notification-manager-operator-59c696d5c8-rrvq8   0/2     ImagePullBackOff   0             7m35s
+kubesphere-monitoring-system   prometheus-operator-d68b5cdcc-prnml              0/2     ImagePullBackOff   0             8m4s
+kubesphere-system              ks-apiserver-f94599bcd-wdbcw                     0/1     ErrImagePull       0             10m
+kubesphere-system              ks-console-8577b6d79b-wcbtf                      0/1     ImagePullBackOff   0             10m
+kubesphere-system              ks-controller-manager-874c8fcdc-59bdl            0/1     ErrImagePull       0             10m
+kubesphere-system              ks-installer-7d5fb7bf64-v46n4                    1/1     Running            0             11m
+
+헐..
+이미지를 또 못땡겨온거야..
+
+kubectl describe snapshot-controller-0 -n kube-system
+Events:
+  Type     Reason     Age                     From               Message
+  ----     ------     ----                    ----               -------
+  Normal   Scheduled  7m58s                   default-scheduler  Successfully assigned kube-system/snapshot-controller-0 to kk-w3-ubuntu
+  Normal   Pulling    6m33s (x4 over 7m57s)   kubelet            Pulling image "dockerhub.kubekey.local/csiplugin/snapshot-controller:v4.0.0"
+  Warning  Failed     6m33s (x4 over 7m57s)   kubelet            Failed to pull image "dockerhub.kubekey.local/csiplugin/snapshot-controller:v4.0.0": rpc error: code = NotFound desc = failed to pull and unpack image "dockerhub.kubekey.local/csiplugin/snapshot-controller:v4.0.0": failed to resolve reference "dockerhub.kubekey.local/csiplugin/snapshot-controller:v4.0.0": dockerhub.kubekey.local/csiplugin/snapshot-controller:v4.0.0: not found
+  Warning  Failed     6m33s (x4 over 7m57s)   kubelet            Error: ErrImagePull
+  Warning  Failed     6m18s (x6 over 7m57s)   kubelet            Error: ImagePullBackOff
+  Normal   BackOff    2m54s (x20 over 7m57s)  kubelet            Back-off pulling image "dockerhub.kubekey.local/csiplugin/snapshot-controller:v4.0.0"
+
+
+이미지 경로가 harbor안에 kubesphereio로 push되어있는데..
+땡겨갈때는 개별적 폴더에서 땡겨가네
+하버에 개별적으로 추가해 줘야 되는거야?
+
+하우
+
+
+일단 여기까지

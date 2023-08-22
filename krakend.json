@@ -1,0 +1,1490 @@
+{
+  "version": 2,
+  "extra_config": {
+    "github_com/devopsfaith/krakend-gologging": {
+      "level": "INFO",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true,
+      "format": "logstash"
+    },
+    "github_com/devopsfaith/krakend-logstash": {
+      "enabled": true
+    }
+  },
+  "timeout": "300s",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "name": "open api",
+  "port": 8080,
+  "endpoints": [
+    {
+      "endpoint": "/auth/jwk",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/jose/jwk",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/a/token",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/jose/jwt?kid=a",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/a/jwks.json",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "backend": [
+        {
+          "url_pattern": "/jose/a/jwks.json",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/b/token",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/jose/jwt?kid=b",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/b/jwks.json",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "backend": [
+        {
+          "url_pattern": "/jose/b/jwks.json",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/token",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "backend": [
+        {
+          "url_pattern": "/jose/token",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/token",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "github.com/devopsfaith/krakend-jose/validator": {
+          "alg": "RS256",
+          "jwk-url": "http://dashboard:3000/jose/.well-known/jwks.json",
+          "issuer": "acornsoft.io",
+          "audience": [
+            "ccaudience"
+          ],
+          "roles": [
+            "SYSTEM",
+            "DEVOPS"
+          ],
+          "roles_key": "roles",
+          "cache": true,
+          "disable_jwk_security": true
+        }
+      },
+      "headers_to_pass": [
+        "Authorization"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/jose/token",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/token/valid",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "github.com/devopsfaith/krakend-jose/validator": {
+          "alg": "RS256",
+          "jwk-url": "http://dashboard:3000/jose/.well-known/jwks.json",
+          "issuer": "acornsoft.io",
+          "audience": [
+            "ccaudience"
+          ],
+          "roles": [
+            "SYSTEM",
+            "DEVOPS"
+          ],
+          "roles_key": "roles",
+          "cache": true,
+          "disable_jwk_security": true
+        }
+      },
+      "headers_to_pass": [
+        "Authorization"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/jose/valid",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "backend": [
+        {
+          "url_pattern": "/jose/.well-known/jwks.json",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/registrysecret",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/registrysecret",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/registrysecret",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/registrysecret",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/registrysecret/{secret_name}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/registrysecret/{secret_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/registrysecret/{secret_name}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/registrysecret/{secret_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/registrysecret/{secret_name}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/registrysecret/{secret_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/type/{serverless_type}/service/{service_name}/token",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/type/{serverless_type}/service/{service_name}/token",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/project/{project_name}/type/{serverless_type}/service/{service_name}/token",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/project/{project_name}/type/{serverless_type}/service/{service_name}/token",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}/{type}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}/{type}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}/{type}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}/{type}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}/{type}/{a}/{b}/{c}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/baas/project/{project_name}/{service}/{service_name}/{func}/{func_name}/{type}/{a}/{b}/{c}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}/{b}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}/{b}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/runtime",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/runtime",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/runtime/{runtime_name}/example",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/runtime/{runtime_name}/example",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}/{b}/{c}/{d}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}/{b}/{c}/{d}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "timeout": "300s",
+      "extra_config": {
+        
+      },
+      "headers_to_pass": [
+        "*"
+      ],
+      "querystring_params": [
+        "*"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/oant/serverlessv1/faas/project/{project_name}/function/{function_name}/{a}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "PUT",
+          "extra_config": {
+            
+          },
+          "host": [
+            "http://dashboard:3000"
+          ],
+          "querystring_params": [
+            "*"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    }
+  ]
+}

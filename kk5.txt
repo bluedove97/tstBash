@@ -496,8 +496,8 @@ kk-w1-ubuntu   Ready    worker          7d7h   v1.24.9   10.100.0.109   <none>  
 kubectl -n kubesphere-system get svc
 kubectl -n kubesphere-system patch service ks-apiserver -p '{"spec":{"type":"NodePort"}}'
 
-#노드 포트를 내가 원하는 포트로 변경
-kubectl edit -n kubesphere-system get svc ks-apiserver
+#노드 포트를 내가 원하는 포트(30780)로 변경
+kubectl edit -n kubesphere-system svc ks-apiserver
 
 #테스트
 curl -X POST -H 'Content-Type: application/x-www-form-urlencoded' \
@@ -543,7 +543,7 @@ YXBpVmVyc2lvbjogdjEKY2x1c3RlcnM6Ci0gY2x1c3RlcjoKICAgIGNlcnRpZmljYXRlLWF1dGhvcml0
 
 
 
-
+# 클러스터 추가
 {{base.url}}/apis/cluster.kubesphere.io/v1alpha1/clusters?fieldManager=admin&pretty=true
 
 {
@@ -567,3 +567,19 @@ YXBpVmVyc2lvbjogdjEKY2x1c3RlcnM6Ci0gY2x1c3RlcjoKICAgIGNlcnRpZmljYXRlLWF1dGhvcml0
         "provider": ""
     }
 }
+
+
+
+
+
+# 클러스터 삭제
+Request URL: http://192.168.219.167:30880/apis/cluster.kubesphere.io/v1alpha1/clusters/mcluster2
+Request Method: DELETE
+Status Code: 200 OK
+Remote Address: 192.168.219.167:30880
+Referrer Policy: strict-origin-when-cross-origin
+
+
+
+
+

@@ -1,0 +1,293 @@
+https://velog.io/@kubernetes/Cloud-Native-PostgreSQL-1
+https://velog.io/@xgro/doik2-03
+https://sharing-for-us.tistory.com/15
+
+# 목표
+$ helm repo add cnpg-kbr https://cr.smap-beta.samsungds.net/chartrepo/cnpg-kbr
+$ helm repo list
+$ helm search repo cnpg-kbr
+cnpg-kbr/cloudnative-pg 0.21.4          1.23.1          CloudNativePG Operator Helm Chart
+cnpg-kbr/cluster        0.0.9                           Deploys and manages a CloudNativePG cluster and...
+# cnpg-kbr-values.yaml 파일 작성
+cat > cnpg-kbr-values.yaml
+nodeSelector: {node-role.kubernetes.io/control-plane=}
+tolerations: [{key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule}]
+# CloudNative-PG Operator 설치
+    helm -n cnpg-system install cnpg-kbr cnpg-kbr/cloudnative-pg -f ./cnpg-kbr-values.yaml
+    or
+    helm upgrade --install cnpg-kbr -n cnpg-system --create-namespace cnpg/cloudnative-pg -f cnpg-kbr-values.haml
+	
+
+
+cat > mycluster1.yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cluster-example
+spec:
+  instances: 3
+  storage:
+    size: 1Gi
+	
+	
+	
+kubectl apply -f ./mycluster1.yaml
+kubectl get cluster
+kubectl get deploy,po -n cnpg-system
+kubectl get crd | grep cnpg
+
+
+
+# PostgreSQL Cluster 구성
+cat > cnpg-app-cluster.yaml
+~~
+imageName: ghcr.io/cloudnative-pg/postgresql:15.3
+monitoring:
+  enablePodMonitor: true
+~~
+$ kubectl create ns cnpg-app
+$ kubectl apply -n cnpg-app -f cnpg-app-cluster.yaml
+$ kubectl get pdb,po,svc,pvc -n cnpg-app -owide
+
+
+
+----------------------------------------- HOME -----------------------------------
+# REPO 추가
+$ helm repo add cnpg https://cloudnative-pg.github.io/charts
+
+
+$ helm search repo cnpg
+NAME               	CHART VERSION	APP VERSION	DESCRIPTION                                       
+cnpg/cnpg-sandbox  	0.6.1        	1.17.1     	A sandbox for CloudNativePG                       
+cnpg/cloudnative-pg	0.21.4       	1.23.1     	CloudNativePG Operator Helm Chart                 
+cnpg/cluster       	0.0.9        	           	Deploys and manages a CloudNativePG cluster and...
+cnpg/pgbench       	0.1.0        	           	A Helm chart that starts a CNPG Cluster and exe...
+
+
+
+
+cat > cnpg-values.yaml
+nodeSelector: {node-role.kubernetes.io/control-plane=''}
+tolerations: [{key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule}]
+
+# CloudNative-PG Operator 설치
+helm upgrade --install cnpg -n cnpg-system --create-namespace cnpg/cloudnative-pg -f cnpg-values.haml
+helm upgrade --install cnpg -n cnpg-system --create-namespace cnpg/cloudnative-pg -f ./cnpg-values.yaml
+Error: UPGRADE FAILED: failed to create resource: Deployment.apps "cnpg-cloudnative-pg" is invalid: spec.template.spec.nodeSelector: Invalid value: "node-role.kubernetes.io/control-plane=''": name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+
+
+cat > cnpg-values.yaml
+nodeSelector: {node-role.kubernetes.io/control-plane: }
+tolerations: [{key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule}]
+
+#다시
+helm upgrade --install cnpg -n cnpg-system --create-namespace cnpg/cloudnative-pg -f ./cnpg-values.yaml
+```
+  Release "cnpg" has been upgraded. Happy Helming!
+  NAME: cnpg
+  LAST DEPLOYED: Thu Jun 13 23:02:43 2024
+  NAMESPACE: cnpg-system
+  STATUS: deployed
+  REVISION: 6
+  TEST SUITE: None
+  NOTES:
+  CloudNativePG operator should be installed in namespace "cnpg-system".
+  You can now create a PostgreSQL cluster with 3 nodes in the current namespace as follows:
+  
+  cat <<EOF | kubectl apply -f -
+  # Example of PostgreSQL cluster
+  apiVersion: postgresql.cnpg.io/v1
+  kind: Cluster
+  metadata:
+    name: cluster-example
+  spec:
+    instances: 3
+    storage:
+      size: 1Gi
+  EOF
+
+  kubectl get cluster
+```
+
+
+
+cat > mycluster1.yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cluster-example
+spec:
+  instances: 3
+  storage:
+    size: 1Gi
+
+kubectl apply -f ./mycluster1.yaml
+
+kubectl get cluster
+  NAME              AGE     INSTANCES   READY   STATUS               PRIMARY
+  cluster-example   2m56s   1                   Setting up primary
+
+kubectl get deploy,po -n cnpg-system
+ NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+ deployment.apps/cnpg-cloudnative-pg   1/1     1            1           22m
+
+  NAME                                       READY   STATUS    RESTARTS   AGE
+  pod/cnpg-cloudnative-pg-55b577df96-v5hhk   1/1     Running   0          22m
+
+kubectl get crd | grep cnpg
+  backups.postgresql.cnpg.io                2024-06-13T13:38:24Z
+  clusterimagecatalogs.postgresql.cnpg.io   2024-06-13T13:38:24Z
+  clusters.postgresql.cnpg.io               2024-06-13T13:38:24Z
+  imagecatalogs.postgresql.cnpg.io          2024-06-13T13:38:24Z
+  poolers.postgresql.cnpg.io                2024-06-13T13:38:24Z
+  scheduledbackups.postgresql.cnpg.io       2024-06-13T13:38:24Z
+
+
+
+  
+cat > cnpg-app-cluster.yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mycluster
+spec:
+  imageName: ghcr.io/cloudnative-pg/postgresql:15.3
+  instances: 3
+  storage:
+    size: 1Gi
+  postgresql:
+    parameters:
+      max_worker_processes: "40"
+      timezone: "Asia/Seoul"
+    pg_hba:
+      - host all postgres all trust
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: true
+  bootstrap:
+    initdb:
+      database: app
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+      owner: app
+  monitoring:
+    enablePodMonitor: true
+
+$ kubectl create ns cnpg-app
+$ kubectl apply -n cnpg-app -f ./cnpg-app-cluster.yaml
+$ kubectl get pdb,po,svc,pvc -n cnpg-app -owide
+  NAME                                           MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+  poddisruptionbudget.policy/mycluster           1               N/A               0                     15m
+  poddisruptionbudget.policy/mycluster-primary   1               N/A               0                     15m
+  
+  NAME                           READY   STATUS    RESTARTS   AGE   IP       NODE     NOMINATED NODE   READINESS GATES
+  pod/mycluster-1-initdb-g2xj9   0/1     Pending   0          15m   <none>   <none>   <none>           <none>
+  
+  NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+  service/mycluster-r    ClusterIP   10.96.40.62      <none>        5432/TCP   15m   cnpg.io/cluster=mycluster,cnpg.io/podRole=instance
+  service/mycluster-ro   ClusterIP   10.102.32.242    <none>        5432/TCP   15m   cnpg.io/cluster=mycluster,role=replica
+  service/mycluster-rw   ClusterIP   10.103.123.154   <none>        5432/TCP   15m   cnpg.io/cluster=mycluster,role=primary
+  
+  NAME                                STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/mycluster-1   Pending                                                     15m   Filesystem
+
+
+
+
+cat > pv1.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv1
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  #storageClassName: manual
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /dbdata2/pv1
+
+
+cat > pv2.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv2
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  #storageClassName: manual
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /dbdata2/pv2
+
+cat > pv3.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv1
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  #storageClassName: manual
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /dbdata2/pv3
+
+
+
+kubectl get pdb,po,svc,pvc -n cnpg-app -owide
+NAME                                           MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/mycluster           1               N/A               1                     4m53s
+poddisruptionbudget.policy/mycluster-primary   1               N/A               0                     4m53s
+
+NAME              READY   STATUS    RESTARTS   AGE     IP          NODE                NOMINATED NODE   READINESS GATES
+pod/mycluster-1   1/1     Running   0          4m46s   10.40.0.1   node2.example.com   <none>           <none>
+pod/mycluster-2   1/1     Running   0          40s     10.32.0.2   node1.example.com   <none>           <none>
+pod/mycluster-3   1/1     Running   0          21s     10.32.0.3   node1.example.com   <none>           <none>
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+service/mycluster-r    ClusterIP   10.103.116.133   <none>        5432/TCP   4m53s   cnpg.io/cluster=mycluster,cnpg.io/podRole=instance
+service/mycluster-ro   ClusterIP   10.96.185.213    <none>        5432/TCP   4m53s   cnpg.io/cluster=mycluster,role=replica
+service/mycluster-rw   ClusterIP   10.101.111.216   <none>        5432/TCP   4m53s   cnpg.io/cluster=mycluster,role=primary
+
+NAME                                STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE     VOLUMEMODE
+persistentvolumeclaim/mycluster-1   Bound    pv1      1Gi        RWO                           4m53s   Filesystem
+persistentvolumeclaim/mycluster-2   Bound    pv2      1Gi        RWO                           4m35s   Filesystem
+persistentvolumeclaim/mycluster-3   Bound    pv3      1Gi        RWO                           29s     Filesystem
+
+
+
+kubectl get cluster -A
+NAMESPACE   NAME              AGE     INSTANCES   READY   STATUS                     PRIMARY
+cnpg-app    mycluster         5m33s   3           3       Cluster in healthy state   mycluster-1
+default     cluster-example   46m                         Setting up primary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+docker pull ghcr.io/cloudnative-pg/postgresql:15.3
+docker tag ghcr.io/cloudnative-pg/postgresql:15.3 bluedove97/cloudnative-pg-postgresql:15.3
+docker push bluedove97/cloudnative-pg-postgresql:15.3
+

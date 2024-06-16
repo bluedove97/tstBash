@@ -109,47 +109,92 @@ helm upgrade --install cnpg -n cnpg-system --create-namespace cnpg/cloudnative-p
   kubectl get cluster
 ```
 
+$ kubectl get crd | grep cnpg
+```
+backups.postgresql.cnpg.io                2024-06-13T13:38:24Z
+clusterimagecatalogs.postgresql.cnpg.io   2024-06-13T13:38:24Z
+clusters.postgresql.cnpg.io               2024-06-13T13:38:24Z
+imagecatalogs.postgresql.cnpg.io          2024-06-13T13:38:24Z
+poolers.postgresql.cnpg.io                2024-06-13T13:38:24Z
+scheduledbackups.postgresql.cnpg.io       2024-06-13T13:38:24Z
+```
 
 
-cat > mycluster1.yaml
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
+$ kubectl get all -n cnpg-system 
+```
+NAME                                       READY   STATUS    RESTARTS       AGE
+pod/cnpg-cloudnative-pg-55b577df96-v5hhk   1/1     Running   1 (144m ago)   2d21h
+
+NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/cnpg-webhook-service   ClusterIP   10.96.165.126   <none>        443/TCP   2d21h
+
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cnpg-cloudnative-pg   1/1     1            1           2d21h
+
+NAME                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/cnpg-cloudnative-pg-55b577df96   1         1         1       2d21h
+```
+
+
+# 로컬시스템엔 storageclass 세팅이 안되어있으므로, 사용할 pv를 3개 미리 만들어둔다
+cat > pv1.yaml 
+apiVersion: v1
+kind: PersistentVolume
 metadata:
-  name: cluster-example
+  name: pv1
 spec:
-  instances: 3
-  storage:
-    size: 1Gi
-
-kubectl apply -f ./mycluster1.yaml
-
-kubectl get cluster
-  NAME              AGE     INSTANCES   READY   STATUS               PRIMARY
-  cluster-example   2m56s   1                   Setting up primary
-
-kubectl get deploy,po -n cnpg-system
- NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
- deployment.apps/cnpg-cloudnative-pg   1/1     1            1           22m
-
-  NAME                                       READY   STATUS    RESTARTS   AGE
-  pod/cnpg-cloudnative-pg-55b577df96-v5hhk   1/1     Running   0          22m
-
-kubectl get crd | grep cnpg
-  backups.postgresql.cnpg.io                2024-06-13T13:38:24Z
-  clusterimagecatalogs.postgresql.cnpg.io   2024-06-13T13:38:24Z
-  clusters.postgresql.cnpg.io               2024-06-13T13:38:24Z
-  imagecatalogs.postgresql.cnpg.io          2024-06-13T13:38:24Z
-  poolers.postgresql.cnpg.io                2024-06-13T13:38:24Z
-  scheduledbackups.postgresql.cnpg.io       2024-06-13T13:38:24Z
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  #storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/pv1
 
 
+cat > pv2.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv2
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  #storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/pv2
 
-  
+cat > pv3.yaml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv1
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  #storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/pv3
+
+
+
+$ kubectl create ns cnpg-app
 cat > cnpg-app-cluster.yaml
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: mycluster
+  name: cnpg-app-cluster
+  namespace: cnpg-app
 spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:15.3
   instances: 3
@@ -173,117 +218,144 @@ spec:
   monitoring:
     enablePodMonitor: true
 
-$ kubectl create ns cnpg-app
-$ kubectl apply -n cnpg-app -f ./cnpg-app-cluster.yaml
+	
+$ kubectl get cluster -n cnpg-app 
+NAME               AGE   INSTANCES   READY   STATUS                     PRIMARY
+cnpg-app-cluster   14m   3           3       Cluster in healthy state   cnpg-app-cluster-1
+
 $ kubectl get pdb,po,svc,pvc -n cnpg-app -owide
-  NAME                                           MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
-  poddisruptionbudget.policy/mycluster           1               N/A               0                     15m
-  poddisruptionbudget.policy/mycluster-primary   1               N/A               0                     15m
-  
-  NAME                           READY   STATUS    RESTARTS   AGE   IP       NODE     NOMINATED NODE   READINESS GATES
-  pod/mycluster-1-initdb-g2xj9   0/1     Pending   0          15m   <none>   <none>   <none>           <none>
-  
-  NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-  service/mycluster-r    ClusterIP   10.96.40.62      <none>        5432/TCP   15m   cnpg.io/cluster=mycluster,cnpg.io/podRole=instance
-  service/mycluster-ro   ClusterIP   10.102.32.242    <none>        5432/TCP   15m   cnpg.io/cluster=mycluster,role=replica
-  service/mycluster-rw   ClusterIP   10.103.123.154   <none>        5432/TCP   15m   cnpg.io/cluster=mycluster,role=primary
-  
-  NAME                                STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE   VOLUMEMODE
-  persistentvolumeclaim/mycluster-1   Pending                                                     15m   Filesystem
+```
+NAME                                                  MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/cnpg-app-cluster           1               N/A               1                     6m15s
+poddisruptionbudget.policy/cnpg-app-cluster-primary   1               N/A               0                     6m15s
+
+NAME                     READY   STATUS    RESTARTS   AGE     IP          NODE                NOMINATED NODE   READINESS GATES
+pod/cnpg-app-cluster-1   1/1     Running   0          3m5s    10.32.0.2   node1.example.com   <none>           <none>
+pod/cnpg-app-cluster-2   1/1     Running   0          2m39s   10.40.0.1   node2.example.com   <none>           <none>
+pod/cnpg-app-cluster-3   1/1     Running   0          2m12s   10.32.0.3   node1.example.com   <none>           <none>
+
+NAME                          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+service/cnpg-app-cluster-r    ClusterIP   10.107.129.14    <none>        5432/TCP   6m15s   cnpg.io/cluster=cnpg-app-cluster,cnpg.io/podRole=instance
+service/cnpg-app-cluster-ro   ClusterIP   10.104.136.103   <none>        5432/TCP   6m15s   cnpg.io/cluster=cnpg-app-cluster,role=replica
+service/cnpg-app-cluster-rw   ClusterIP   10.100.108.109   <none>        5432/TCP   6m15s   cnpg.io/cluster=cnpg-app-cluster,role=primary
+
+NAME                                       STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE     VOLUMEMODE
+persistentvolumeclaim/cnpg-app-cluster-1   Bound    pv1      1Gi        RWO                           6m15s   Filesystem
+persistentvolumeclaim/cnpg-app-cluster-2   Bound    pv2      1Gi        RWO                           2m54s   Filesystem
+persistentvolumeclaim/cnpg-app-cluster-3   Bound    pv3      1Gi        RWO                           2m27s   Filesystem
+```
 
 
 
 
-cat > pv1.yaml 
+# nodeport 구성
+cat > cnpg-app-np-svc.yaml
 apiVersion: v1
-kind: PersistentVolume
+kind: Service
 metadata:
-  name: pv1
+  name: cnpg-app-np-svc
+  namespace: cnpg-app
 spec:
-  capacity:
-    storage: 1Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  #storageClassName: manual
-  persistentVolumeReclaimPolicy: Delete
-  hostPath:
-    path: /dbdata2/pv1
+  type: NodePort
+  selector:
+    cnpg.io/cluster: cnpg-app-cluster
+    role: primary
+  ports:
+  - name: postgres
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+    nodePort: 30101
 
 
-cat > pv2.yaml 
+
+# primary pod 접속
+
+kubectl get -n cnpg-app secrets cnpg-app-cluster-superuser -o jsonpath={.data.username} | base64 -d
+postgres
+
+kubectl get -n cnpg-app secrets cnpg-app-cluster-superuser -o jsonpath={.data.password} | base64 -d 
+uhza6mq5yQkbPF2wXkYFfpFLaZRFM0zxNzMuCMDp42weHG44lwBwwQnUV9wR5vmf
+
+kubectl exec -it -n cnpg-app pod/cnpg-app-cluster-1 -- bash
+
+
+
+
+# client test용 pod 생성
+cat > cnpg-app-client.yaml
 apiVersion: v1
-kind: PersistentVolume
+kind: Pod
 metadata:
-  name: pv2
+  name: cnpg-app-client
+  namespace: cnpg-app
+  labels:
+    app: cnpg-app-client
 spec:
-  capacity:
-    storage: 1Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  #storageClassName: manual
-  persistentVolumeReclaimPolicy: Delete
-  hostPath:
-    path: /dbdata2/pv2
+  containers:
+  - name: cnpg-app-client-cntr
+    image: 
+    command: ["tail"]
+    args: ["-f", "/dev/null"]
 
-cat > pv3.yaml 
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv1
-spec:
-  capacity:
-    storage: 1Gi
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteOnce
-  #storageClassName: manual
-  persistentVolumeReclaimPolicy: Delete
-  hostPath:
-    path: /dbdata2/pv3
+
+kubectl exec -it -n cnpg-app pod/cnpg-app-client -- bash
 
 
 
-kubectl get pdb,po,svc,pvc -n cnpg-app -owide
-NAME                                           MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
-poddisruptionbudget.policy/mycluster           1               N/A               1                     4m53s
-poddisruptionbudget.policy/mycluster-primary   1               N/A               0                     4m53s
+kubectl exec -it pod/cnpg-app-cluster-1 -- psql -U postgres -h cnpg-app-cluster-rw -p 5432
 
-NAME              READY   STATUS    RESTARTS   AGE     IP          NODE                NOMINATED NODE   READINESS GATES
-pod/mycluster-1   1/1     Running   0          4m46s   10.40.0.1   node2.example.com   <none>           <none>
-pod/mycluster-2   1/1     Running   0          40s     10.32.0.2   node1.example.com   <none>           <none>
-pod/mycluster-3   1/1     Running   0          21s     10.32.0.3   node1.example.com   <none>           <none>
-
-NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE     SELECTOR
-service/mycluster-r    ClusterIP   10.103.116.133   <none>        5432/TCP   4m53s   cnpg.io/cluster=mycluster,cnpg.io/podRole=instance
-service/mycluster-ro   ClusterIP   10.96.185.213    <none>        5432/TCP   4m53s   cnpg.io/cluster=mycluster,role=replica
-service/mycluster-rw   ClusterIP   10.101.111.216   <none>        5432/TCP   4m53s   cnpg.io/cluster=mycluster,role=primary
-
-NAME                                STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE     VOLUMEMODE
-persistentvolumeclaim/mycluster-1   Bound    pv1      1Gi        RWO                           4m53s   Filesystem
-persistentvolumeclaim/mycluster-2   Bound    pv2      1Gi        RWO                           4m35s   Filesystem
-persistentvolumeclaim/mycluster-3   Bound    pv3      1Gi        RWO                           29s     Filesystem
+psql -U postgres -h cnpg-app-cluster-rw -p 5432
 
 
 
-kubectl get cluster -A
-NAMESPACE   NAME              AGE     INSTANCES   READY   STATUS                     PRIMARY
-cnpg-app    mycluster         5m33s   3           3       Cluster in healthy state   mycluster-1
-default     cluster-example   46m                         Setting up primary
+CREATE USER cnpg_user PASSWORD 'cnpg1234' SUPERUSER;
+
+ALTER USER cnpg_user CREATEDB;
+
+
+CREATE DATABASE cnpg WITH OWNER cnpg_user ENCODING 'UTF8';
+
+GRANT ALL PRIVILEGES ON DATABASE cnpg TO cnpg_user;
 
 
 
+psql -d cnpg -u cnpg_user -h cnpg-app-cluster-rw -p 5432
+
+CREATE TABLE public.test1 (
+	id bigserial NOT NULL,
+	"date" timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	cont varchar(100) NULL,
+	CONSTRAINT test1_pk PRIMARY KEY (id)
+);
+INSERT INTO test1 (cont) VALUES('from pod')
+
+psql -d cnpg -U cnpg_user -h cnpg-app-cluster-rw -p 5432 -c "select * from test1"
+psql -d cnpg -U cnpg_user -h cnpg-app-cluster-rw -p 5432 -c "INSERT INTO test1 (cont) VALUES('from pod')"
+psql -d cnpg -U postgres -h cnpg-app-cluster-rw -p 5432 -c "INSERT INTO test1 (cont) VALUES('from pod')"
+
+kubectl exec -n cnpg-app -it pod/cnpg-app-cluster-1 -- psql -d cnpg -U postgres -h cnpg-app-cluster-rw -p 5432 -c "INSERT INTO test1 (cont) VALUES('from pod')"
 
 
+입력
+cat > test-run.sh
+#!/bin/bash
+  
+for var in {1..100}
+do
+  echo $var
+  kubectl exec -n cnpg-app -it pod/cnpg-app-cluster-1 -- psql -d cnpg -U postgres -h cnpg-app-cluster-rw -p 5432 -c "INSERT INTO test1 (cont) VALUES('from step $var')"
+  sleep 0.1
+done
+
+모니터링 1
+watch kubectl get pdb,po,svc,pvc -n cnpg-app -owide
+
+모니터링 2
+while true; do kubectl exec -it -n cnpg-app pod/cnpg-app-client -- psql -U postgres -h cnpg-app-cluster-ro -p 5432 -d cnpg -c "select count(*) from test1"; sleep 1; done;
 
 
-
-
-
-
-
-
+테스트 파드 1 삭제
 
 
 
@@ -291,3 +363,7 @@ docker pull ghcr.io/cloudnative-pg/postgresql:15.3
 docker tag ghcr.io/cloudnative-pg/postgresql:15.3 bluedove97/cloudnative-pg-postgresql:15.3
 docker push bluedove97/cloudnative-pg-postgresql:15.3
 
+
+docker pull bitnami/postgresql:15
+docker tag bitnami/postgresql:15 bluedove97/postgresql:15
+docker push bluedove97/postgresql:15

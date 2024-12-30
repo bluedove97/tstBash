@@ -804,7 +804,7 @@ docker push cr.proj.pe.kr/public-pj/nginx:1.14
           [plugins."io.containerd.grpc.v1.cri".registry.configs]
             [plugins."io.containerd.grpc.v1.cri".registry.configs."cr.proj.pe.kr".auth]
               username = "admin"
-              password = "Whgdmsdkagh00!"
+              password = "P@88w0rd"
             [plugins."io.containerd.grpc.v1.cri".registry.configs."cr.proj.pe.kr".tls]
               insecure_skip_verify = true
     ```

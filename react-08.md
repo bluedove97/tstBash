@@ -113,6 +113,8 @@ export default App
 ```
 
 ## useFetch
+> 이름이 알려진 훅이지만, 내장훅이 아니라 사용자가 작성하는 커스텀 훅이다
+
 ```js
 function useFetch(url) {
   const [data, setData] = useState(null)

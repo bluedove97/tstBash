@@ -185,3 +185,69 @@ public class JobController : ControllerBase
 - /job/dequeue를 호출하면 큐에서 하나 꺼내서 반환
 - 큐가 비어 있으면 NotFound
 
+```
+using System.Collections.Concurrent;
+
+public static class UserQueueManager
+{
+    private static readonly ConcurrentDictionary<string, BlockingCollection<string>> _queues 
+        = new ConcurrentDictionary<string, BlockingCollection<string>>();
+
+    public static BlockingCollection<string> GetQueue(string userId)
+    {
+        return _queues.GetOrAdd(userId, _ => new BlockingCollection<string>(new ConcurrentQueue<string>()));
+    }
+}
+```
+
+```
+public class ProducerMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public ProducerMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // 예시: userId를 헤더에서 받는다고 가정
+        var userId = context.Request.Headers["X-User-Id"].ToString();
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            var queue = UserQueueManager.GetQueue(userId);
+            var item = $"Job-{DateTime.Now:HHmmssfff}";
+            queue.Add(item);
+            Console.WriteLine($"[Producer] User:{userId}, Added:{item}");
+        }
+
+        await _next(context);
+    }
+}
+```
+
+
+```
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("[controller]")]
+public class JobController : ControllerBase
+{
+    [HttpGet("dequeue/{userId}")]
+    public IActionResult Dequeue(string userId)
+    {
+        var queue = UserQueueManager.GetQueue(userId);
+
+        if (queue.TryTake(out var item))
+        {
+            return Ok(new { userId, item });
+        }
+        else
+        {
+            return NotFound($"Queue for user {userId} is empty");
+        }
+    }
+}
+```

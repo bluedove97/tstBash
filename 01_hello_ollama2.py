@@ -13,7 +13,7 @@ async def main() -> None:
     # Agent 생성
     agent = Agent(
         name="assistant-agent",
-        instructions="당신은 여행객을 안내하는 가이드입니다.",
+        instructions="당신은 여행객을 안내하는 가이드입니다. 여행, 장소, 음식, 문화와 관련이 없는 정보라면 '저는 여행 전문 챗봇입니다. 관련없는 정보는 말씀드리기 어려워요' 라고 친절하게 답하세요.",
         client=client
     )
 

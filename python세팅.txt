@@ -1,0 +1,53 @@
+파이선 3.12 설치 (기존 3.10이 있었음)
+
+D:\Work\maf 에 get-started 프로젝트 생성
+https://github.com/microsoft/agent-framework/tree/main/python/samples/01-get-started
+
+vs code에서 띄우고
+git-bash로 터미널 설정
+
+
+가상환경 세팅
+python -m venv mvenv
+source mvenv/Scripts/activate
+
+가상환경 종료
+deactivate
+
+
+pip 인스톨
+pip install agent-framework --pre
+
+
+로컬 ollama와 연계하고 싶다.
+
+local ollama 구동
+$ curl http://localhost:11434/v1/models
+{"object":"list","data":[{"id":"gemma3:12b","object":"model","created":1772419304,"owned_by":"library"},{"id":"gemma3:4b","object":"model","created":1772419032,"owned_by":"library"},{"id":"ingu627/exaone4.0:1.2b","object":"model","created":1772418398,"owned_by":"ingu627"},{"id":"qwen2.5-coder:7b","object":"model","created":1772370261,"owned_by":"library"},{"id":"qwen3:8b","object":"model","created":1772368692,"owned_by":"library"}]}
+
+
+
+pip 다시 인스톨
+pip install openai
+
+
+
+```
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama"
+)
+
+response = client.chat.completions.create(
+    model="qwen3:8b",
+    messages=[
+        {"role": "system", "content": "markdown 형태로 답변해."},
+        {"role": "user", "content": "한국의 수도는 어디야?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+
+```

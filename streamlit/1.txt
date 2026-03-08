@@ -1,0 +1,34 @@
+streamlit 사용해보기
+
+pip install streamlit openai
+
+실행은 streamlit run streamlit_app.py
+>>>> 첫 구동시 eamil입력 안보고 싶으면 streamlit run streamlit_app.py --server.headless true 라고 지프로가 얘기함
+
+>>>> 두번째 ~/.streamlit/config.toml 생성
+    ```
+    [server]
+    headless = true
+    enableCORS = false
+    port = 8501
+    address = "0.0.0.0"
+
+    [browser]
+    gatherUsageStats = false
+    ```
+
+docker로는
+```
+FROM python:3.12
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip install streamlit openai
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "streamlit_app.py", "--server.headless=true", "--server.address=0.0.0.0"]
+```
+

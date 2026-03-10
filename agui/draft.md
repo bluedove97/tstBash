@@ -6,8 +6,9 @@ Agent‑User Interaction Protocol 소개
 
 ---
 
-# 세미나 목표
+# 1. 세미나 목표
 
+AI Agent를 실제 애플리케이션과 연결하는 방법
 - AG‑UI 개념 이해
 - Microsoft Agent Framework와의 관계 이해
 - Tool / UI / Human-in-the-loop 구조 이해
@@ -15,8 +16,20 @@ Agent‑User Interaction Protocol 소개
 
 ---
 
-# AI Agent 애플리케이션의 문제
+# 2. AI Agent 애플리케이션의 문제
 
+기존 LLM 애플리케이션 구조
+```
+User
+ ↓
+Frontend (React / Web)
+ ↓
+Backend API
+ ↓
+LLM
+```
+
+문제점
 - UI와 Agent 연결 표준이 없음
 - Streaming 구현을 직접 해야 함
 - Tool 실행 상태 표시 어려움
@@ -24,18 +37,19 @@ Agent‑User Interaction Protocol 소개
 
 ---
 
-# AI Agent 발전 단계
-
+# 3. AI Agent 발전 단계
+AI 애플리케이션 발전
 1. Chatbot
 2. Tool‑using LLM
 3. AI Agent
 4. Agent Ecosystem
 
-→ Agent가 똑똑해졌지만 UI 연결은 여전히 어렵다
+하지만 문제
+> Agent가 똑똑해졌지만 UI 연결은 여전히 어렵다
 
 ---
 
-# AG‑UI란 무엇인가
+# 4. AG‑UI란 무엇인가
 
 Agent‑User Interaction Protocol
 
@@ -44,10 +58,14 @@ Agent‑User Interaction Protocol
 - Streaming 지원
 - Interactive UI 지원
 
+AG-UI목적
+
+> Agent와 사용자 인터페이스를 연결하는 표준 프로토콜 제공
+
 ---
 
-# Agent Protocol Stack
-
+# 5. Agent Protocol Stack
+```
 User  
 ↑  
 AG‑UI  
@@ -55,22 +73,44 @@ AG‑UI
 Agent  
 ↑  
 MCP / Tools
+```
+
+각 Protocol 역할
+| Protocol | 역할            |
+| -------- | ------------- |
+| AG-UI    | Agent ↔ User  |
+| MCP      | Agent ↔ Tools |
+| A2A      | Agent ↔ Agent |
+
+AG-UI는 Agent 시스템의 Last Mile 역할을 한다.
 
 ---
 
-# Microsoft Agent Framework + AG‑UI
+# 6. Microsoft Agent Framework + AG‑UI
 
-- Agent Framework → Agent logic
-- AG‑UI → User interaction
+| 구성              | 역할             |
+| --------------- | -------------- |
+| Agent Framework | Agent Logic    |
+| AG-UI           | UI Interaction |
+
 
 구조
 
-Frontend ↔ AG‑UI ↔ Agent Framework ↔ LLM
+```
+Frontend
+   ↑
+ AG-UI Protocol
+   ↑
+Agent Framework
+   ↑
+LLM + Tools
+```
 
 ---
 
-# AG‑UI 주요 기능
+# 7. AG‑UI 주요 기능
 
+AG-UI가 제공하는 기능
 - Real-time streaming
 - Tool execution 표시
 - Generative UI
@@ -79,34 +119,46 @@ Frontend ↔ AG‑UI ↔ Agent Framework ↔ LLM
 
 ---
 
-# AG‑UI Architecture
+# 8. AG‑UI Architecture
 
-Frontend  
-↓  
-AG‑UI Protocol  
-↓  
-AG‑UI Server  
-↓  
-Agent Framework  
-↓  
+전체 구조
+```
+Frontend App
+   │
+   │ AG-UI Protocol
+   │
+AG-UI Server
+   │
+Agent Framework
+   │
 LLM + Tools
+```
+
+구성 요소
+- AG-UI Server
+- Agent Endpoint
+- Event Streaming
+- Tool Execution
 
 ---
 
-# Event 기반 구조
+# 9. Event 기반 구조
 
-AG‑UI는 request/response가 아니라 event stream 기반
+AG‑UI는 
+> request/response가 아니라 event stream 기반
 
 주요 이벤트
-
-- TEXT_MESSAGE_CONTENT
-- TOOL_CALL_START
-- TOOL_CALL_RESULT
-- STATE_UPDATE
-
+```
+TEXT_MESSAGE_CONTENT
+TOOL_CALL_START
+TOOL_CALL_DELTA
+TOOL_CALL_RESULT
+STATE_UPDATE
+```
+Agent 실행 과정이 UI에 실시간 전달된다
 ---
 
-# Python AG‑UI 설치
+# 10. Python AG‑UI 설치
 
 ```bash
 pip install agent-framework-ag-ui --pre
@@ -116,25 +168,32 @@ Python 환경에서 AG‑UI integration 사용 가능
 
 ---
 
-# AG‑UI Server 개념
-
+# 11.AG‑UI Server 개념
+AG-UI Server 역할
 - Agent를 HTTP endpoint로 노출
 - 클라이언트는 streaming으로 결과 수신
 - Web UI와 Agent를 연결
 
+구조
+```
+Agent → HTTP Endpoint → UI
+```
 ---
 
-# Demo 1 – Basic Chat
+# 12. Demo 1 – Basic Chat
+
+시연 목표
+ - AG-UI 기본 채팅 동작 확인
 
 시연 내용
-
-- AG‑UI Agent 실행
-- Web client 연결
+- Python Agent 실행
+- AG-UI Server 실행
+- Web Client 접속
 - Streaming 응답 확인
 
 ---
 
-# Backend Tool Rendering
+# 13. Backend Tool Rendering
 
 Agent는 Tool을 실행할 수 있음
 
@@ -144,70 +203,101 @@ Agent는 Tool을 실행할 수 있음
 - Database Query
 - Internal API
 
+구조
+```
+Agent
+ ↓
+Tool call
+ ↓
+Result streaming
+```
 ---
 
-# Tool Event 흐름
+# 14. Tool Event 흐름
+Tool 실행 과정
+```
+User Question
+ ↓
+Agent Reasoning
+ ↓
+Tool Call
+ ↓
+Tool Result
+ ↓
+Streaming Response
+```
 
-User 질문  
-↓  
-Agent reasoning  
-↓  
-Tool call  
-↓  
-Tool result  
-↓  
-User에게 streaming
-
+UI는 Tool 실행 상태를 표시할 수 있다.
+```
+Searching database...
+Fetching weather...
+```
 ---
 
-# Demo 2 – Tool 호출
+# 15.Demo 2 – Tool 호출
 
 예시 질문
-
+```
 서울 날씨 알려줘
+```
 
-Agent → Weather Tool 호출  
+동작
+```
+Agent → Weather Tool 호출
 UI → Tool 실행 상태 표시
-
+UI → 결과 표시
+```
 ---
 
-# Frontend Tools
-
-Agent가 UI 컴포넌트를 생성
+# 16.Frontend Tools
+Frontend Tool이란
+> Agent가 UI 기능을 호출하는 것
 
 예
-
 - Chart
 - Table
 - Modal
 - Form
+- Map
 
+Agent → UI Component 생성
 ---
 
-# Generative UI
+# 17.Generative UI
 
 Agent가 UI를 생성하여 Frontend에 전달
 
 예
-
+```
 - Stock chart
 - Product card
 - Data table
-
+```
+UI Payload 예시
+```json
+{
+  "type": "chart",
+  "data": {}
+}
+```
+Frontend가 rendering 수행
 ---
 
-# Demo 3 – Generative UI
+# 18.Demo 3 – Generative UI
 
-예시
-
+예시 질문
+```
 TSLA stock price
-
+```
+동작
+```
 Agent → chart UI 생성  
 Frontend → chart rendering
+```
 
 ---
 
-# Human‑in‑the‑loop
+# 19. Human‑in‑the‑loop
 
 위험한 작업에는 사용자 승인 필요
 
@@ -217,32 +307,40 @@ Frontend → chart rendering
 - 코드 실행
 - DB 변경
 
+따라서 필요한 기능
+> Human Approval
 ---
 
-# Approval Workflow
-
+# 20. Approval Workflow
+Approval 흐름
+```
 Agent action request  
 ↓  
 User approval  
 ↓  
 Action 실행
+```
+
+AG-UI는 이 workflow를 기본 지원한다.
 
 ---
 
-# Demo 4 – Human Approval
+# 21.Demo 4 – Human Approval
 
 Agent
-
+```
 Send email to customer
-
+```
 UI
-
+```
 Approve / Reject 버튼
+```
 
+사용자 승인 후 작업 실행
 ---
 
-# AG‑UI 장점
-
+# 22.AG‑UI 장점
+AG-UI 사용 시 장점
 - UI integration 표준화
 - Streaming 기본 지원
 - Tool 상태 표시
@@ -251,15 +349,20 @@ Approve / Reject 버튼
 
 ---
 
-# 정리
+# 23. 기존방식 vs AG-UI
+| 항목             | 기존 방식  | AG-UI    |
+| -------------- | ------ | -------- |
+| Streaming      | 직접 구현  | 기본 지원    |
+| Tool 상태        | 직접 구현  | 이벤트      |
+| Approval       | 직접 구현  | 기본 지원    |
+| UI Integration | Custom | Protocol |
+
+
+# 24.정리
 
 - Agent Framework → Agent 로직
 - AG‑UI → 사용자 인터페이스
 - Event 기반 Agent UI 구조
 - Tool + UI + Human workflow 통합
 
----
 
-# Q&A
-
-질문 있으신가요?

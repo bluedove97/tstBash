@@ -365,4 +365,10 @@ AG-UI 사용 시 장점
 - Event 기반 Agent UI 구조
 - Tool + UI + Human workflow 통합
 
+# 참고링크
+
+https://discuss.pytorch.kr/t/ag-ui-feat-copilotkit/6952
+
+https://daeunnniii.tistory.com/219
+
 

@@ -173,6 +173,20 @@ Qdrant
 
 ## Qdrant + BGE-M3 + Dense/Sparse/Hybrid 샘플코드
 
+1. Dense
+- 의미 기반 (semantic)
+- 문장이 달라도 잘 찾음
+- 키워드 정확도는 약함
+
+2. Sparse
+- 키워드 기반 (BM25)
+- exact match 강함
+- 의미 이해는 약함
+
+3. Hybrid
+- 둘의 장점 결합
+- 실제 서비스에서 사용
+
 #### Collection 생성 (Dense + Sparse)
 
 ```python
@@ -326,4 +340,37 @@ hybrid_result = client.query_points(
 print("\n=== Hybrid Search ===")
 for r in hybrid_result.points:
     print(r.payload["text"], r.score)
+```
+
+
+#### 결과 비교
+
+```python
+def print_results(title, results):
+    print(f"\n=== {title} ===")
+    for r in results.points:
+        print(f"{r.payload['text']} | score={r.score:.4f}")
+
+print_results("Dense", dense_result)
+print_results("Sparse", sparse_result)
+print_results("Hybrid", hybrid_result)
+```
+
+#### 가중치 튜닝
+
+```python
+hybrid_result = client.query_points(
+    collection_name=collection_name,
+    query={
+        "vector": {
+            "dense": dense_q[0],
+            "sparse": sparse_q[0]
+        },
+        "weights": {
+            "dense": 0.7,
+            "sparse": 0.3
+        }
+    },
+    limit=3
+)
 ```

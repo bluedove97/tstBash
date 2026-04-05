@@ -1,0 +1,50 @@
+VScode에서 Continue를 이용한 GPT 무료 사용법(
+출처: https://hyunicecream.tistory.com/123 [Café:티스토리]
+
+VScode에 공짜 로컬 GPT 연결하기
+https://makenow90.tistory.com/37
+
+
+ollama는 이미 설치되어 있어야 하고
+모델도 다운로드 받아둔 상태에서
+
+코드용 경량 : ollama pull codeqwen (속도빠름)
+코드용 무겁 : ollama pull deepseek-coder-v2 (속도느린대신 더 좋음)
+다용도 : ollama pull llama3.1 (코드 작성,수정, 해석이 아닌경우 사용할 예정)
+자동탭완성 : ollama pull starcoder2:3b (탭치면 자동 코드 입력할때 쓰이는 모델)
+
+vscode 접속
+extension or 확장 탭 클릭
+continue 검색 후 다운
+
+
+config.yaml
+name: Local Config
+version: 1.0.0
+schema: v1
+models:
+  - name: qwen3:8b
+    provider: ollama
+    model: qwen3:8b
+    roles:
+      - chat
+  - name: qwen2.5-coder:3b
+    provider: ollama
+    model: qwen2.5-coder:3b
+    useLegacyCompletionsEndpoint: false
+    roles:
+      - edit
+      - apply
+      - autocomplete
+  - name: Autodetect
+    provider: ollama
+    model: AUTODETECT
+
+
+
+
+
+
+
+클로드코드 자동화 코드
+https://youtu.be/DGolK4QzmZY

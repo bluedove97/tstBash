@@ -24,3 +24,5 @@ Blender의 MCP가 있다면?
 
 pip install pillow, fastmcp
 
+
+https://gofastmcp.com/getting-started/welcome

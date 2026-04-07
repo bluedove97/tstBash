@@ -1,0 +1,84 @@
+https://youtu.be/DGolK4QzmZY
+
+
+
+
+vscode에 CLAUDE.md파일을 넣는다.
+
+프롬프트
+```
+@CLAUDE.md파일을 기반으로 프로젝트 초기화를 해줘
+```
+
+
+Plan 모드로 변경한다.
+프롬프트
+```
+자동화 하나 만드는거 도와줘. 나는 매일 아침 6시에 설정파일에 있는 회사목록들에 대해 주가정보와 뉴스,이슈정보를 수집할거야
+최근 일주일간의 주가현황 변동을 표로 정리하고, 어떤 뉴스가 뜨고 있는지, 회사에 어떤 공시나 이슈가 있는지 사실기반으로 정리를 해줘
+해당 리포트 내용이 정리되면 gmail로 내용을 발송해줘
+데이터를 어떤 방식으로 가져올건지 조사해줘. API를 사용할지 MCP 서버를 쓸지도 알아보고, 도움될만한 스킬도 찾아줘
+이건 내 생각인데, 만약 추가로 질문이나 추천할 만한게 있으면 말해줘.
+```
+
+
+중간에 PC를 이걸로 안쓰고, 도커 미니피씨를 쓴다고 변경했음.
+요런걸 만들어 주네.
+```
+# 1. 로컬에서 먼저 테스트
+pip install -r requirements.txt
+python tools/run_morning_report.py
+
+# 2. Docker 빌드 및 테스트
+docker-compose build
+docker-compose run --rm app python tools/run_morning_report.py
+
+# 3. 스케줄 확인 (cron 작동 여부)
+docker-compose up -d
+docker logs content_report_app_1 -f
+```
+
+
+
+마무리단계
+```
+지금 당장 해야 할 것 딱 2가지:
+
+1. .env 파일 채우기
+
+
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+GMAIL_SENDER=내계정@gmail.com
+GMAIL_RECIPIENT=받을계정@gmail.com
+Gmail 앱 비밀번호: Google 계정 → 보안 → 2단계 인증 → 앱 비밀번호
+
+2. 미니 서버에서 Docker 실행
+
+
+docker-compose up -d
+테스트 먼저 해보고 싶으면 로컬에서:
+
+
+pip install -r requirements.txt
+python tools/run_morning_report.py
+실행하면 .tmp/report.html이 생기고 이메일이 발송됩니다.
+```
+.env채운다음에
+venv로 가상환경 만들고
+pip 인스톨 해서
+
+
+
+이후 에러나는 것들이 몇 있었다.
+requirments.txt파일이 잘못되어서 고친게 있었고.
+실행을 venv 가상으로 해달라고 재요청한게 있었다.
+
+
+최종실행
+미니서버에서 도커로 데몬을 띄워두고(docker-compose까진 필요없었지) crontab으로 처리
+
+클로드코드 ... 내 밥줄을 끊을 셈이냐
+
+
+
+
